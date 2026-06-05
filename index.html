@@ -1,2451 +1,794 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSE 物理溫習工具 - 離線版</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
-    </script>
-    <style>
-        :root {
-            --bg: #f5f6fa;
-            --surface: #ffffff;
-            --primary: #4a6cf7;
-            --primary-dark: #3651d5;
-            --accent: #f97316;
-            --danger: #ef4444;
-            --success: #22c55e;
-            --text: #1e293b;
-            --text-secondary: #64748b;
-            --border: #e2e8f0;
-            --sidebar-bg: #1e293b;
-            --sidebar-text: #cbd5e1;
-            --sidebar-active: #4a6cf7;
-            --card-shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .06);
-            --card-shadow-lg: 0 10px 25px rgba(0, 0, 0, .1);
-            --radius: 12px;
-            --radius-sm: 8px;
-            --transition: 0.2s ease;
-            --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-            --sidebar-width: 280px;
-            --topbar-height: 0px;
-            --bottombar-height: 36px;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSE Physics Revision Tool</title>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <!-- KaTeX for formulas -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
-        body {
-            font-family: 'Inter', 'PingFang HK', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-        /* ============ SIDEBAR ============ */
-        .sidebar {
-            width: var(--sidebar-width);
-            min-width: var(--sidebar-width);
-            background: var(--sidebar-bg);
-            color: var(--sidebar-text);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            z-index: 100;
-            overflow-y: auto;
-            overflow-x: hidden;
-            transition: transform var(--transition);
-        }
-        .sidebar-header {
-            padding: 16px 18px;
-            border-bottom: 1px solid rgba(255, 255, 255, .1);
-            flex-shrink: 0;
-        }
-        .sidebar-header .logo {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: -.02em;
-        }
-        .sidebar-header .logo span {
-            color: var(--accent);
-        }
-        .sidebar-nav {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px 0;
-        }
-        .sidebar-nav .nav-section {
-            margin-bottom: 4px;
-        }
-        .sidebar-nav .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 18px;
-            cursor: pointer;
-            transition: all var(--transition);
-            font-size: .9rem;
-            border-left: 3px solid transparent;
-            color: var(--sidebar-text);
-            text-decoration: none;
-            white-space: nowrap;
-        }
-        .sidebar-nav .nav-item:hover {
-            background: rgba(255, 255, 255, .05);
-            color: #fff;
-        }
-        .sidebar-nav .nav-item.active {
-            background: rgba(74, 108, 247, .2);
-            border-left-color: var(--sidebar-active);
-            color: #fff;
-            font-weight: 600;
-        }
-        .sidebar-nav .nav-item .icon {
-            width: 20px;
-            text-align: center;
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
-        .sidebar-nav .nav-sub {
-            padding-left: 28px;
-            font-size: .82rem;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height .35s ease;
-        }
-        .sidebar-nav .nav-sub.open {
-            max-height: 600px;
-        }
-        .sidebar-nav .nav-sub .nav-item {
-            font-size: .8rem;
-            padding: 7px 18px;
-            border-radius: 0;
-        }
-        .sidebar-footer {
-            padding: 10px 18px;
-            border-top: 1px solid rgba(255, 255, 255, .1);
-            font-size: .75rem;
-            color: #94a3b8;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .sidebar-footer .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--success);
-            flex-shrink: 0;
-        }
-        .sidebar-footer .dot.offline {
-            background: #f59e0b;
-        }
+  <style>
+    :root {
+      --bg: #f5f6fa;
+      --sidebar-bg: #1a1d2e;
+      --sidebar-text: #c5c8d4;
+      --sidebar-hover: #252940;
+      --sidebar-active: #2d3252;
+      --accent: #5b7fff;
+      --accent-light: #eef1ff;
+      --card-bg: #ffffff;
+      --text: #2c3e50;
+      --text-light: #6b7280;
+      --border: #e5e7eb;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+      --sidebar-width: 280px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', sans-serif; background: var(--bg); color: var(--text); display:flex; min-height:100vh; line-height:1.6; }
+    .sidebar { width: var(--sidebar-width); background: var(--sidebar-bg); color: var(--sidebar-text); height:100vh; position:fixed; left:0; top:0; z-index:100; display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; transition: transform var(--transition); scrollbar-width:thin; scrollbar-color:#3a3f5c #1a1d2e; }
+    .sidebar::-webkit-scrollbar { width:5px; }
+    .sidebar::-webkit-scrollbar-track { background:#1a1d2e; }
+    .sidebar::-webkit-scrollbar-thumb { background:#3a3f5c; border-radius:10px; }
+    .sidebar-header { padding:20px 18px; border-bottom:1px solid #2a2d3f; position:sticky; top:0; background:var(--sidebar-bg); z-index:5; }
+    .sidebar-header .logo { font-size:1.3em; font-weight:700; color:#fff; letter-spacing:-0.3px; display:flex; align-items:center; gap:10px; }
+    .sidebar-header .logo .icon { width:36px; height:36px; background:var(--accent); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2em; }
+    .sidebar-header .subtitle { font-size:0.7em; color:#8890a8; margin-top:2px; }
+    .sidebar-nav { flex:1; padding:8px 0; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:10px 18px; cursor:pointer; transition: all var(--transition); border-left:3px solid transparent; font-size:0.9em; text-decoration:none; color:var(--sidebar-text); user-select:none; white-space:nowrap; }
+    .nav-item:hover { background:var(--sidebar-hover); color:#e0e3ed; }
+    .nav-item.active { background:var(--sidebar-active); border-left-color:var(--accent); color:#fff; font-weight:600; }
+    .nav-item .emoji { font-size:1.2em; width:24px; text-align:center; flex-shrink:0; }
+    .nav-divider { height:1px; background:#2a2d3f; margin:8px 14px; }
+    .nav-label { font-size:0.7em; text-transform:uppercase; letter-spacing:1.5px; color:#6b7294; padding:8px 18px 4px; font-weight:600; }
+    .chapter-sub { overflow:hidden; transition:max-height 0.35s ease; max-height:0; }
+    .chapter-sub.open { max-height:600px; }
+    .chapter-sub .nav-item { padding-left:40px; font-size:0.82em; }
+    .sidebar-footer { padding:12px 18px; border-top:1px solid #2a2d3f; font-size:0.7em; color:#6b7294; text-align:center; position:sticky; bottom:0; background:var(--sidebar-bg); }
+    .offline-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--success); margin-right:4px; animation:pulse-dot 2s infinite; }
+    @keyframes pulse-dot { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
 
-        /* ============ MAIN ============ */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
-        }
-        .top-bar {
-            display: none;
-            padding: 12px 20px;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            align-items: center;
-            gap: 12px;
-            flex-shrink: 0;
-        }
-        .hamburger {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 4px;
-            color: var(--text);
-        }
-        .page-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px 24px;
-            scroll-behavior: smooth;
-        }
-        .bottom-bar {
-            height: var(--bottombar-height);
-            background: var(--surface);
-            border-top: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            padding: 0 16px;
-            font-size: .75rem;
-            color: var(--text-secondary);
-            flex-shrink: 0;
-            gap: 16px;
-        }
-        .bottom-bar .status-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: var(--success);
-        }
-
-        /* ============ PAGE SECTIONS ============ */
-        .page {
-            display: none;
-            animation: fadeIn .25s ease;
-        }
-        .page.active {
-            display: block;
-        }
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Cards */
-        .card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 20px;
-            box-shadow: var(--card-shadow);
-            margin-bottom: 16px;
-        }
-        .card-header {
-            font-weight: 700;
-            font-size: 1.05rem;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 14px;
-        }
-        .stat-card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 18px 20px;
-            box-shadow: var(--card-shadow);
-            text-align: center;
-            transition: transform var(--transition);
-        }
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--card-shadow-lg);
-        }
-        .stat-card .value {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
-        .stat-card .label {
-            font-size: .85rem;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-
-        /* Buttons */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 10px 18px;
-            border-radius: var(--radius-sm);
-            font-weight: 600;
-            font-size: .9rem;
-            cursor: pointer;
-            border: none;
-            transition: all var(--transition);
-            font-family: inherit;
-            white-space: nowrap;
-        }
-        .btn-primary {
-            background: var(--primary);
-            color: #fff;
-        }
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-        }
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--primary);
-            color: var(--primary);
-        }
-        .btn-outline:hover {
-            background: var(--primary);
-            color: #fff;
-        }
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: .78rem;
-            border-radius: 6px;
-        }
-        .btn-danger {
-            background: var(--danger);
-            color: #fff;
-        }
-        .btn-success {
-            background: var(--success);
-            color: #fff;
-        }
-        .btn-ghost {
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid transparent;
-        }
-        .btn-ghost:hover {
-            background: var(--bg);
-            border-color: var(--border);
-        }
-
-        /* Tags */
-        .tag {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: .75rem;
-            font-weight: 600;
-            letter-spacing: .02em;
-        }
-        .tag-easy {
-            background: #dcfce7;
-            color: #166534;
-        }
-        .tag-medium {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        .tag-hard {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        .tag-mc {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-        .tag-lq {
-            background: #f3e8ff;
-            color: #6b21a8;
-        }
-
-        /* Quiz */
-        .quiz-card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 24px;
-            box-shadow: var(--card-shadow);
-            margin-bottom: 16px;
-            position: relative;
-        }
-        .quiz-card .q-number {
-            font-weight: 700;
-            color: var(--primary);
-            font-size: .9rem;
-            margin-bottom: 8px;
-        }
-        .quiz-card .q-stem {
-            font-size: 1rem;
-            line-height: 1.6;
-            margin-bottom: 16px;
-        }
-        .quiz-card .option {
-            display: block;
-            padding: 10px 16px;
-            margin: 4px 0;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            border: 2px solid var(--border);
-            transition: all var(--transition);
-            font-size: .9rem;
-        }
-        .quiz-card .option:hover {
-            border-color: var(--primary);
-            background: #f8faff;
-        }
-        .quiz-card .option.selected {
-            border-color: var(--primary);
-            background: #eef2ff;
-            font-weight: 600;
-        }
-        .quiz-card .option.correct {
-            border-color: var(--success);
-            background: #f0fdf4;
-            color: #166534;
-        }
-        .quiz-card .option.wrong {
-            border-color: var(--danger);
-            background: #fef2f2;
-            color: #991b1b;
-        }
-        .quiz-card .explanation {
-            margin-top: 12px;
-            padding: 12px 16px;
-            background: #fffbeb;
-            border-radius: var(--radius-sm);
-            font-size: .85rem;
-            border-left: 3px solid #f59e0b;
-            display: none;
-        }
-        .quiz-card .explanation.show {
-            display: block;
-        }
-        .quiz-card textarea {
-            width: 100%;
-            min-height: 100px;
-            border: 2px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 10px;
-            font-family: inherit;
-            font-size: .9rem;
-            resize: vertical;
-            margin-top: 8px;
-        }
-        .quiz-card textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        /* Progress bar */
-        .progress-bar {
-            height: 6px;
-            background: var(--border);
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 8px 0;
-        }
-        .progress-bar .fill {
-            height: 100%;
-            background: var(--primary);
-            border-radius: 10px;
-            transition: width .4s ease;
-        }
-
-        /* Tree */
-        .tree-item {
-            cursor: pointer;
-            padding: 6px 10px;
-            border-radius: 4px;
-            transition: background var(--transition);
-            font-size: .85rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .tree-item:hover {
-            background: rgba(0, 0, 0, .03);
-        }
-        .tree-item .arrow {
-            transition: transform .25s ease;
-            font-size: .7rem;
-            width: 14px;
-            flex-shrink: 0;
-        }
-        .tree-item .arrow.open {
-            transform: rotate(90deg);
-        }
-        .tree-children {
-            padding-left: 20px;
-            display: none;
-        }
-        .tree-children.open {
-            display: block;
-        }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, .5);
-            z-index: 999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn .2s ease;
-        }
-        .modal {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 24px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: var(--card-shadow-lg);
-        }
-        .modal h3 {
-            margin-bottom: 12px;
-        }
-        .modal .close-btn {
-            float: right;
-            background: none;
-            border: none;
-            font-size: 1.3rem;
-            cursor: pointer;
-            color: var(--text-secondary);
-        }
-
-        /* Search */
-        .search-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, .6);
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            padding-top: 80px;
-            animation: fadeIn .15s ease;
-        }
-        .search-box {
-            background: var(--surface);
-            border-radius: var(--radius);
-            width: 90%;
-            max-width: 550px;
-            max-height: 70vh;
-            overflow-y: auto;
-            box-shadow: var(--card-shadow-lg);
-        }
-        .search-box input {
-            width: 100%;
-            padding: 16px 20px;
-            border: none;
-            font-size: 1.1rem;
-            border-radius: var(--radius) var(--radius) 0 0;
-            font-family: inherit;
-            border-bottom: 2px solid var(--border);
-        }
-        .search-box input:focus {
-            outline: none;
-            border-bottom-color: var(--primary);
-        }
-        .search-results {
-            padding: 8px 0;
-        }
-        .search-results .result-item {
-            padding: 10px 20px;
-            cursor: pointer;
-            transition: background var(--transition);
-            font-size: .9rem;
-        }
-        .search-results .result-item:hover {
-            background: var(--bg);
-        }
-        .search-results .result-item .match-type {
-            font-size: .7rem;
-            color: var(--primary);
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        /* Canvas draft */
-        .draft-canvas {
-            border: 2px solid var(--border);
-            border-radius: var(--radius-sm);
-            cursor: crosshair;
-            background: #fff;
-            touch-action: none;
-        }
-
-        /* Timer */
-        .timer-display {
-            font-family: var(--font-mono);
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text);
-            letter-spacing: .05em;
-        }
-        .timer-display.warning {
-            color: var(--danger);
-            animation: pulse .8s infinite;
-        }
-        @keyframes pulse {
-            50% {
-                opacity: .5;
-            }
-        }
-
-        /* Highlight */
-        .highlighted-text {
-            background: #fef08a;
-            padding: 1px 3px;
-            border-radius: 2px;
-        }
-
-        /* Note float */
-        .float-note {
-            position: fixed;
-            bottom: 60px;
-            right: 20px;
-            width: 300px;
-            background: #fffbeb;
-            border: 2px solid #fcd34d;
-            border-radius: var(--radius);
-            padding: 14px;
-            z-index: 500;
-            box-shadow: var(--card-shadow-lg);
-            font-size: .85rem;
-        }
-        .float-note textarea {
-            width: 100%;
-            min-height: 80px;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            padding: 8px;
-            font-family: inherit;
-            font-size: .85rem;
-            resize: vertical;
-            margin-top: 6px;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                position: fixed;
-                left: 0;
-                top: 0;
-                height: 100vh;
-                transform: translateX(-100%);
-                z-index: 200;
-            }
-            .sidebar.open {
-                transform: translateX(0);
-            }
-            .hamburger {
-                display: block;
-            }
-            .top-bar {
-                display: flex;
-            }
-            .page-container {
-                padding: 12px;
-            }
-            .card-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            .float-note {
-                width: 240px;
-                right: 8px;
-                bottom: 50px;
-            }
-        }
-        @media (max-width: 480px) {
-            .card-grid {
-                grid-template-columns: 1fr;
-            }
-            .stat-card .value {
-                font-size: 1.6rem;
-            }
-            .btn {
-                padding: 8px 14px;
-                font-size: .8rem;
-            }
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 5px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-        .sidebar::-webkit-scrollbar-thumb {
-            background: #475569;
-        }
-
-        /* Simulator iframe-like */
-        .sim-container {
-            border: 2px solid var(--border);
-            border-radius: var(--radius);
-            overflow: hidden;
-            background: #fff;
-            position: relative;
-        }
-        .sim-container canvas {
-            display: block;
-            width: 100%;
-        }
-        .sim-controls {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            padding: 10px;
-            align-items: center;
-        }
-        .sim-controls label {
-            font-size: .8rem;
-            font-weight: 600;
-        }
-        .sim-controls input[type="range"] {
-            width: 100px;
-        }
-    </style>
+    .main-content { margin-left: var(--sidebar-width); flex:1; min-height:100vh; padding:24px 28px; max-width:1100px; width:100%; transition: margin var(--transition); }
+    .page { display:none; animation: fadeSlideIn 0.35s ease; }
+    .page.active { display:block; }
+    @keyframes fadeSlideIn { from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:translateY(0); } }
+    .page-title { font-size:1.6em; font-weight:700; margin-bottom:8px; color:#1a1d2e; }
+    .page-subtitle { color:var(--text-light); margin-bottom:20px; font-size:0.9em; }
+    .card { background:var(--card-bg); border-radius:var(--radius); padding:20px 22px; margin-bottom:16px; box-shadow:var(--shadow); border:1px solid var(--border); transition: all var(--transition); }
+    .card:hover { box-shadow:var(--shadow-lg); }
+    .card-header { font-weight:700; font-size:1.05em; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+    .card-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:14px; }
+    .stat-card { text-align:center; padding:18px 14px; }
+    .stat-card .stat-value { font-size:2.2em; font-weight:800; color:var(--accent); }
+    .stat-card .stat-label { font-size:0.8em; color:var(--text-light); margin-top:2px; }
+    .btn { padding:9px 18px; border-radius:var(--radius-sm); border:none; cursor:pointer; font-size:0.88em; font-weight:600; transition: all var(--transition); display:inline-flex; align-items:center; gap:6px; letter-spacing:0.2px; }
+    .btn-primary { background:var(--accent); color:#fff; }
+    .btn-primary:hover { background:#4a6eef; transform:translateY(-1px); }
+    .btn-outline { background:#fff; color:var(--accent); border:2px solid var(--accent); }
+    .btn-outline:hover { background:var(--accent-light); }
+    .btn-sm { padding:5px 12px; font-size:0.78em; border-radius:6px; }
+    .btn-danger { background:#fff; color:var(--danger); border:2px solid var(--danger); }
+    .btn-danger:hover { background:#fef2f2; }
+    .btn-success { background:var(--success); color:#fff; }
+    .btn-success:hover { background:#059669; }
+    .progress-bar { height:8px; background:#e5e7eb; border-radius:10px; overflow:hidden; margin:6px 0; }
+    .progress-fill { height:100%; background:var(--accent); border-radius:10px; transition: width 0.5s ease; }
+    .tag { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.72em; font-weight:600; }
+    .tag-easy { background:#d1fae5; color:#065f46; }
+    .tag-medium { background:#fef3c7; color:#92400e; }
+    .tag-hard { background:#fee2e2; color:#991b1b; }
+    .question-block { background:#fafbfd; border-radius:var(--radius-sm); padding:18px 20px; margin:10px 0; border-left:4px solid var(--accent); }
+    .option-item { padding:10px 14px; margin:5px 0; border-radius:6px; cursor:pointer; border:2px solid #e5e7eb; transition: all var(--transition); font-size:0.9em; }
+    .option-item:hover { border-color:var(--accent); background:#f8faff; }
+    .option-item.selected { border-color:var(--accent); background:var(--accent-light); font-weight:600; }
+    .option-item.correct { border-color:var(--success)!important; background:#d1fae5!important; color:#065f46!important; }
+    .option-item.wrong { border-color:var(--danger)!important; background:#fee2e2!important; color:#991b1b!important; }
+    .search-box { width:100%; padding:11px 16px; border-radius:25px; border:2px solid #e5e7eb; font-size:0.9em; outline:none; background:#f9fafb; }
+    .search-box:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(91,127,255,0.1); background:#fff; }
+    .sim-canvas { width:100%; max-width:600px; border-radius:var(--radius-sm); background:#1a1d2e; cursor:pointer; display:block; margin:10px 0; touch-action:none; }
+    .sim-controls { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:8px 0; }
+    .sim-controls label { font-size:0.8em; font-weight:600; color:var(--text-light); }
+    .sim-controls input[type="range"] { width:120px; }
+    .timer-display { font-size:2em; font-weight:700; font-variant-numeric:tabular-nums; font-family:'SF Mono','Consolas','Monaco',monospace; color:#1a1d2e; }
+    .timer-warning { color:var(--danger)!important; animation:blink 0.8s infinite; }
+    @keyframes blink { 50%{ opacity:0.5; } }
+    .notes-overlay { position:fixed; top:0; right:0; width:380px; height:100vh; background:#fff; box-shadow:-5px 0 25px rgba(0,0,0,0.15); z-index:200; transform:translateX(100%); transition:transform 0.3s ease; display:flex; flex-direction:column; padding:20px; }
+    .notes-overlay.open { transform:translateX(0); }
+    .notes-overlay textarea { flex:1; border:2px solid #e5e7eb; border-radius:var(--radius-sm); padding:14px; font-size:0.9em; resize:none; font-family:inherit; outline:none; }
+    .notes-overlay textarea:focus { border-color:var(--accent); }
+    .overlay-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:199; display:none; }
+    .overlay-backdrop.show { display:block; }
+    .toast { position:fixed; bottom:24px; right:24px; background:#1a1d2e; color:#fff; padding:12px 20px; border-radius:25px; font-size:0.85em; z-index:300; animation:toastIn 0.4s ease, toastOut 0.4s ease 1.8s forwards; box-shadow:var(--shadow-lg); }
+    @keyframes toastIn { from{ transform:translateY(30px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+    @keyframes toastOut { from{ opacity:1; } to{ opacity:0; transform:translateY(20px); } }
+    @media (max-width:768px) {
+      .sidebar { transform:translateX(-100%); width:260px; }
+      .sidebar.mobile-open { transform:translateX(0); }
+      .main-content { margin-left:0; padding:16px; }
+      .mobile-menu-btn { display:flex!important; position:fixed; top:12px; left:12px; z-index:150; background:var(--sidebar-bg); color:#fff; border:none; width:40px; height:40px; border-radius:10px; cursor:pointer; font-size:1.3em; align-items:center; justify-content:center; box-shadow:var(--shadow-lg); }
+      .notes-overlay { width:100%; }
+      .card-grid { grid-template-columns:1fr; }
+    }
+    .mobile-menu-btn { display:none; }
+  </style>
 </head>
 <body>
+<button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
 
-    <!-- ==================== SIDEBAR ==================== -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="logo">⚡ DSE <span>物理</span> 溫習工具</div>
-        </div>
-        <nav class="sidebar-nav" id="sidebarNav">
-            <!-- Dashboard -->
-            <div class="nav-item active" data-page="dashboard">
-                <span class="icon">📊</span> 儀表板
-            </div>
-            <!-- Practice Center -->
-            <div class="nav-item" data-page="practice">
-                <span class="icon">📝</span> 練習中心
-            </div>
-            <!-- Wrong Answer Book -->
-            <div class="nav-item" data-page="wrongbook">
-                <span class="icon">📕</span> 錯題本 <span id="wrongCountBadge" style="font-size:.7rem;background:var(--danger);color:#fff;padding:2px 7px;border-radius:10px;margin-left:auto;">0</span>
-            </div>
-            <!-- Favorites -->
-            <div class="nav-item" data-page="favorites">
-                <span class="icon">⭐</span> 我的收藏
-            </div>
-            <!-- Notes -->
-            <div class="nav-item" data-page="notes">
-                <span class="icon">📒</span> 筆記總覽
-            </div>
-            <!-- 課程目錄 -->
-            <div style="padding:8px 18px;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#64748b;margin-top:8px;">課程目錄</div>
-            <div id="courseTree"></div>
-            <!-- Settings -->
-            <div class="nav-item" data-page="settings" style="margin-top:8px;">
-                <span class="icon">⚙️</span> 設定
-            </div>
-        </nav>
-        <div class="sidebar-footer">
-            <span class="dot" id="statusDot"></span>
-            <span id="statusText">離線可用</span>
-            <span style="margin-left:auto;font-size:.7rem;" id="lastSaveTime"></span>
-        </div>
-    </aside>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo"><span class="icon">⚛️</span> DSE Physics</div>
+    <div class="subtitle">Offline Revision Tool v1.0</div>
+  </div>
+  <div class="sidebar-nav" id="sidebarNav"></div>
+  <div class="sidebar-footer">
+    <span class="offline-dot"></span> Offline Ready · <span id="lastSaved">just now</span>
+  </div>
+</aside>
 
-    <!-- ==================== MAIN ==================== -->
-    <div class="main-content">
-        <div class="top-bar">
-            <button class="hamburger" id="hamburgerBtn" aria-label="選單">☰</button>
-            <span style="font-weight:700;">DSE 物理溫習</span>
-            <button class="btn btn-ghost btn-sm" style="margin-left:auto;" id="searchBtn" title="搜索 (Ctrl+K)">🔍 搜索</button>
-        </div>
-        <div class="page-container" id="pageContainer">
-
-            <!-- ===== DASHBOARD PAGE ===== -->
-            <div class="page active" id="page-dashboard">
-                <h2 style="margin-bottom:16px;">📊 學習儀表板</h2>
-                <div class="card-grid">
-                    <div class="stat-card">
-                        <div class="value" id="statTotalPractices">0</div>
-                        <div class="label">總練習次數</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="value" id="statAvgScore">-</div>
-                        <div class="label">平均分數</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="value" id="statStreak">0</div>
-                        <div class="label">連續學習天數 🔥</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="value" id="statCompleted">0</div>
-                        <div class="label">已完成章節</div>
-                    </div>
-                </div>
-                <div class="card" style="margin-top:14px;">
-                    <div class="card-header">📈 近10次練習分數走勢</div>
-                    <canvas id="scoreChart" height="180"></canvas>
-                    <div style="text-align:center;color:var(--text-secondary);font-size:.8rem;margin-top:4px;" id="chartEmptyMsg">
-                        尚無練習數據，開始做練習吧！
-                    </div>
-                </div>
-                <div class="card-grid" style="margin-top:14px;">
-                    <div class="card">
-                        <div class="card-header">🎯 弱點速攻</div>
-                        <p style="font-size:.85rem;color:var(--text-secondary);">從錯題本隨機抽取5題，針對性強化弱點。</p>
-                        <button class="btn btn-primary btn-sm" id="btnWeakAttack" style="margin-top:8px;">開始速攻練習</button>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">📋 各課題正確率</div>
-                        <canvas id="radarChart" height="180"></canvas>
-                        <div style="text-align:center;color:var(--text-secondary);font-size:.75rem;margin-top:4px;" id="radarEmptyMsg">
-                            數據不足，完成練習後自動生成
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== PRACTICE PAGE ===== -->
-            <div class="page" id="page-practice">
-                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
-                    <h2 style="margin:0;">📝 練習中心</h2>
-                    <span class="timer-display" id="practiceTimer">00:00</span>
-                    <button class="btn btn-ghost btn-sm" id="btnPauseTimer">⏯️ 暫停</button>
-                    <button class="btn btn-outline btn-sm" id="btnDraftToggle">✏️ 草稿紙</button>
-                </div>
-                <!-- 練習設定 -->
-                <div class="card" id="practiceSetup">
-                    <div class="card-header">練習設定</div>
-                    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;">
-                        <div>
-                            <label style="font-size:.8rem;font-weight:600;">課題篩選</label>
-                            <select id="practiceTopic" style="padding:8px;border-radius:6px;border:2px solid var(--border);font-family:inherit;">
-                                <option value="all">全部課題</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size:.8rem;font-weight:600;">題型</label>
-                            <select id="practiceType" style="padding:8px;border-radius:6px;border:2px solid var(--border);font-family:inherit;">
-                                <option value="all">全部</option><option value="MC">選擇題 (MC)</option><option value="LQ">長題目 (LQ)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size:.8rem;font-weight:600;">難度</label>
-                            <select id="practiceDifficulty" style="padding:8px;border-radius:6px;border:2px solid var(--border);font-family:inherit;">
-                                <option value="all">全部</option><option value="easy">簡單</option><option value="medium">中等</option><option value="hard">困難</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size:.8rem;font-weight:600;">題數</label>
-                            <select id="practiceCount" style="padding:8px;border-radius:6px;border:2px solid var(--border);font-family:inherit;">
-                                <option value="5">5題</option><option value="10" selected>10題</option><option value="20">20題</option><option value="30">30題</option>
-                            </select>
-                        </div>
-                        <button class="btn btn-primary" id="btnStartPractice">🚀 開始練習</button>
-                    </div>
-                </div>
-                <!-- 練習區 -->
-                <div id="practiceArea" style="display:none;"></div>
-                <div id="practiceResult" style="display:none;"></div>
-                <!-- 草稿紙 -->
-                <div id="draftPanel" style="display:none;margin-top:12px;">
-                    <div class="card">
-                        <div class="card-header">✏️ 草稿紙</div>
-                        <canvas class="draft-canvas" id="draftCanvas" width="500" height="300"></canvas>
-                        <button class="btn btn-ghost btn-sm" style="margin-top:6px;" id="btnClearDraft">清除</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== WRONG BOOK PAGE ===== -->
-            <div class="page" id="page-wrongbook">
-                <h2 style="margin-bottom:16px;">📕 錯題本</h2>
-                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-                    <select id="wrongFilterTopic" style="padding:8px;border-radius:6px;border:2px solid var(--border);font-family:inherit;">
-                        <option value="all">全部課題</option>
-                    </select>
-                    <select id="wrongFilterType" style="padding:8px;border-radius:6px;border:2px solid var(--border);font-family:inherit;">
-                        <option value="all">全部類型</option>
-                        <option value="concept">概念錯誤</option>
-                        <option value="calculation">計算失誤</option>
-                    </select>
-                    <button class="btn btn-outline btn-sm" id="btnRedoAllWrong">🔄 重做全部錯題</button>
-                    <button class="btn btn-ghost btn-sm" id="btnClearWrong">🗑️ 清空錯題本</button>
-                </div>
-                <div id="wrongBookList"><p style="color:var(--text-secondary);">暫無錯題記錄 🎉</p></div>
-            </div>
-
-            <!-- ===== FAVORITES PAGE ===== -->
-            <div class="page" id="page-favorites">
-                <h2 style="margin-bottom:16px;">⭐ 我的收藏</h2>
-                <div id="favoritesList"><p style="color:var(--text-secondary);">尚無收藏項目</p></div>
-            </div>
-
-            <!-- ===== NOTES PAGE ===== -->
-            <div class="page" id="page-notes">
-                <h2 style="margin-bottom:16px;">📒 筆記總覽</h2>
-                <div id="notesList"><p style="color:var(--text-secondary);">尚無筆記，在學習頁面可以添加筆記</p></div>
-            </div>
-
-            <!-- ===== CONTENT PAGE (動態) ===== -->
-            <div class="page" id="page-content">
-                <div id="contentArea"></div>
-            </div>
-
-            <!-- ===== SETTINGS PAGE ===== -->
-            <div class="page" id="page-settings">
-                <h2 style="margin-bottom:16px;">⚙️ 設定</h2>
-                <div class="card">
-                    <div class="card-header">選修單元選擇</div>
-                    <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:10px;">勾選你修讀的選修單元（未勾選的內容將在目錄中隱藏）</p>
-                    <label style="display:block;margin:6px 0;"><input type="checkbox" id="electiveE1" checked> E1 天文學與航天科學</label>
-                    <label style="display:block;margin:6px 0;"><input type="checkbox" id="electiveE2" checked> E2 原子世界</label>
-                    <label style="display:block;margin:6px 0;"><input type="checkbox" id="electiveE3" checked> E3 能量和能源的使用</label>
-                    <label style="display:block;margin:6px 0;"><input type="checkbox" id="electiveE4" checked> E4 醫學物理學</label>
-                    <button class="btn btn-primary btn-sm" style="margin-top:8px;" id="btnSaveElectives">儲存選擇</button>
-                </div>
-                <div class="card">
-                    <div class="card-header">數據管理</div>
-                    <button class="btn btn-outline btn-sm" id="btnExportData">📥 匯出備份 (JSON)</button>
-                    <button class="btn btn-outline btn-sm" style="margin-left:8px;" id="btnImportData">📤 匯入備份</button>
-                    <input type="file" id="importFileInput" style="display:none;" accept=".json">
-                    <button class="btn btn-danger btn-sm" style="margin-left:8px;" id="btnResetAll">⚠️ 清除所有本地數據</button>
-                </div>
-                <div class="card">
-                    <div class="card-header">關於</div>
-                    <p style="font-size:.85rem;color:var(--text-secondary);">DSE 物理溫習工具 v1.0<br>完全離線運作 · 數據存於本機<br>無需帳號 · 無需網絡</p>
-                </div>
-            </div>
-        </div>
-        <!-- Bottom bar -->
-        <div class="bottom-bar">
-            <span class="status-dot" id="bottomStatusDot"></span>
-            <span id="bottomStatusText">就緒</span>
-            <span style="margin-left:auto;">最後儲存: <span id="bottomLastSave">-</span></span>
-        </div>
+<main class="main-content" id="mainContent">
+  <!-- Dashboard -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-title">📊 Dashboard</div>
+    <div class="page-subtitle">Your personal study progress at a glance</div>
+    <div class="card-grid">
+      <div class="card stat-card"><div class="stat-value" id="stat-practice-count">0</div><div class="stat-label">Practices this week</div></div>
+      <div class="card stat-card"><div class="stat-value" id="stat-avg-score">-</div><div class="stat-label">Average Score</div></div>
+      <div class="card stat-card"><div class="stat-value" id="stat-streak">0</div><div class="stat-label">Day Streak 🔥</div></div>
+      <div class="card stat-card"><div class="stat-value" id="stat-wrong-count">0</div><div class="stat-label">Wrong Book Entries</div></div>
     </div>
-
-    <!-- Search overlay -->
-    <div class="search-overlay" id="searchOverlay" style="display:none;">
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="搜索課題、公式、概念... (ESC 關閉)">
-            <div class="search-results" id="searchResults"></div>
-        </div>
+    <div class="card" style="max-width:500px;">
+      <div class="card-header">📈 Recent Score Trend</div>
+      <canvas id="scoreChart" height="180"></canvas>
     </div>
-
-    <!-- Float note -->
-    <div class="float-note" id="floatNote" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <strong>📝 快速筆記</strong>
-            <button style="background:none;border:none;cursor:pointer;font-size:1.2rem;" id="btnCloseFloatNote">×</button>
-        </div>
-        <textarea id="floatNoteText" placeholder="輸入筆記..."></textarea>
-        <button class="btn btn-primary btn-sm" style="margin-top:6px;" id="btnSaveFloatNote">儲存筆記</button>
-        <span style="font-size:.7rem;color:var(--text-secondary);margin-left:8px;" id="floatNoteContext"></span>
+    <div class="card">
+      <div class="card-header">🎯 Weakness Attack <button class="btn btn-primary btn-sm" onclick="quickWeakAttack()">Generate 5 Questions</button></div>
+      <p style="font-size:0.85em;color:var(--text-light);">Randomly picks questions from your wrong answer book.</p>
     </div>
-
-    <!-- Toast -->
-    <div id="toast" style="position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:20px;font-size:.85rem;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none;">訊息</div>
-
-    <script>
-        // ==================== 全域資料結構 ====================
-        const COURSE_STRUCTURE = {
-            compulsory: {
-                title: '必修部分',
-                chapters: {
-                    'heat': {
-                        title: '1. 熱和氣體',
-                        topics: ['溫度與內能', '熱轉移', '物態變化', '氣體定律', '分子運動論'],
-                        content: `
-                            <h3>熱和氣體</h3>
-                            <div class="card"><div class="card-header">🌡️ 溫度與內能</div>
-                            <p>溫度是物體冷熱程度的量度，反映分子平均動能。<strong>內能</strong>是系統內所有分子的動能與勢能之和。</p>
-                            <p>公式：<strong>ΔU = mcΔT</strong>（無相變時）</p>
-                            <p style="color:var(--danger);">⚠️ 常見誤區：溫度高不一定內能大，還取決於質量和物態。</p></div>
-                            <div class="card"><div class="card-header">🔥 熱轉移</div>
-                            <p>傳導、對流、輻射三種方式。傳導需要介質，輻射不需要。</p></div>
-                            <div class="card"><div class="card-header">💨 氣體定律</div>
-                            <p><strong>波義耳定律</strong>：P₁V₁ = P₂V₂（恆溫）<br>
-                            <strong>查理定律</strong>：V₁/T₁ = V₂/T₂（恆壓）<br>
-                            <strong>壓力定律</strong>：P₁/T₁ = P₂/T₂（恆體積）<br>
-                            <strong>理想氣體方程</strong>：PV = nRT</p></div>
-                        `
-                    },
-                    'mechanics': {
-                        title: '2. 力和運動',
-                        topics: ['運動學', '牛頓定律', '力矩', '功與能量', '動量', '圓周運動', '引力'],
-                        content: `
-                            <h3>力和運動</h3>
-                            <div class="card"><div class="card-header">🏃 運動學</div>
-                            <p>v = u + at · s = ut + ½at² · v² = u² + 2as</p></div>
-                            <div class="card"><div class="card-header">🍎 牛頓定律</div>
-                            <p>第一定律：慣性定律。第二定律：F = ma。第三定律：作用力與反作用力。</p>
-                            <p style="color:var(--danger);">⚠️ 常見誤區：作用力與反作用力作用在不同物體上，不能互相抵消。</p></div>
-                            <div class="card"><div class="card-header">🔄 圓周運動</div>
-                            <p>向心力 F = mv²/r = mrω²。向心加速度 a = v²/r。</p></div>
-                        `
-                    },
-                    'waves': {
-                        title: '3. 波動',
-                        topics: ['波的性質', '光的反射與折射', '透鏡', '聲音', '多普勒效應'],
-                        content: `
-                            <h3>波動</h3>
-                            <div class="card"><div class="card-header">🌊 波的性質</div>
-                            <p>v = fλ。橫波與縱波。干涉、繞射、折射。</p></div>
-                            <div class="card"><div class="card-header">💡 光的反射與折射</div>
-                            <p>折射定律：n₁sinθ₁ = n₂sinθ₂。臨界角：sin C = 1/n。</p></div>
-                            <div class="card"><div class="card-header">🔊 多普勒效應</div>
-                            <p>f' = f × (v ± vₒ)/(v ∓ vₛ)</p></div>
-                        `
-                    },
-                    'em': {
-                        title: '4. 電和磁',
-                        topics: ['靜電', '電路', '家居用電', '磁場', '電磁感應', '交流電'],
-                        content: `
-                            <h3>電和磁</h3>
-                            <div class="card"><div class="card-header">⚡ 電路</div>
-                            <p>歐姆定律：V = IR。功率：P = VI = I²R = V²/R。</p>
-                            <p>串聯：R_total = R₁+R₂+... 並聯：1/R_total = 1/R₁+1/R₂+...</p></div>
-                            <div class="card"><div class="card-header">🧲 電磁感應</div>
-                            <p>法拉第定律：ε = -dΦ/dt。楞次定律：感應電流反抗磁通量變化。</p></div>
-                        `
-                    },
-                    'nuclear': {
-                        title: '5. 放射現象與核能',
-                        topics: ['衰變', '半衰期', '核能應用'],
-                        content: `
-                            <h3>放射現象與核能</h3>
-                            <div class="card"><div class="card-header">☢️ 衰變</div>
-                            <p>α衰變：質量數減4，原子序減2。β衰變：原子序加1。γ衰變：無變化。</p></div>
-                            <div class="card"><div class="card-header">⏳ 半衰期</div>
-                            <p>N = N₀(½)^(t/t½)。每經過一個半衰期，放射性核數目減半。</p></div>
-                        `
-                    }
-                }
-            },
-            elective: {
-                title: '選修部分',
-                chapters: {
-                    'E1': { title: 'E1 天文學與航天科學', topics: ['天文觀測', '星體運動', '航天'], content: '<h3>E1 天文學與航天科學</h3><div class="card"><p>克卜勒定律、逃逸速度、軌道力學等內容。</p></div>' },
-                    'E2': { title: 'E2 原子世界', topics: ['光電效應', '原子模型', '量子物理'], content: '<h3>E2 原子世界</h3><div class="card"><p>光電效應：E = hf - φ。德布羅意波長：λ = h/p。</p></div>' },
-                    'E3': { title: 'E3 能量和能源的使用', topics: ['能源', '發電', '效能'], content: '<h3>E3 能量和能源的使用</h3><div class="card"><p>再生能源與非再生能源、發電效率等內容。</p></div>' },
-                    'E4': { title: 'E4 醫學物理學', topics: ['X光', '超聲波', '核醫學'], content: '<h3>E4 醫學物理學</h3><div class="card"><p>醫學影像技術、輻射劑量等內容。</p></div>' }
-                }
-            }
-        };
-
-        // 題庫 (範例題目 - 實際可擴充至數千題)
-        const QUESTION_BANK = [
-            // Heat
-            { id: 'q001', topic: 'heat', subtopic: '氣體定律', type: 'MC', difficulty: 'easy',
-                stem: '在恆溫下，氣體的體積從 2L 壓縮至 1L，其壓力會如何變化？', options: ['A. 減半', 'B. 保持不變', 'C. 加倍',
-                    'D. 變為四倍'
-                ], answer: 2, explanation: '根據波義耳定律 P₁V₁=P₂V₂，體積減半則壓力加倍。', tags: ['氣體定律', '波義耳'] },
-            { id: 'q002', topic: 'heat', subtopic: '熱轉移', type: 'MC', difficulty: 'medium',
-                stem: '以下哪種熱轉移方式不需要介質？', options: ['A. 傳導', 'B. 對流', 'C. 輻射', 'D. 以上皆需要'], answer: 2,
-                explanation: '輻射是通過電磁波傳遞能量，不需要介質，可在真空中進行。', tags: ['熱轉移', '輻射'] },
-            { id: 'q003', topic: 'heat', subtopic: '分子運動論', type: 'LQ', difficulty: 'medium',
-                stem: '解釋為什麼氣體在受熱時壓力會增加。（提示：從分子運動論角度）', answer: 'sample',
-                explanation: '氣體受熱→分子平均動能增加→分子撞擊容器壁的頻率和力度增加→壓力增加。關鍵給分點：分子動能增加、撞擊頻率、壓力定義。',
-                tags: ['分子運動論', '壓力'] },
-            // Mechanics
-            { id: 'q004', topic: 'mechanics', subtopic: '運動學', type: 'MC', difficulty: 'easy',
-                stem: '一物體從靜止開始以 2 m/s² 加速，5秒後的位移是多少？', options: ['A. 10 m', 'B. 25 m', 'C. 50 m',
-                'D. 100 m'], answer: 1, explanation: 's = ut + ½at² = 0 + ½×2×25 = 25m', tags: ['運動學', '位移'] },
-            { id: 'q005', topic: 'mechanics', subtopic: '牛頓定律', type: 'MC', difficulty: 'medium',
-                stem: '一個質量為 5kg 的物體受到 20N 的淨力，其加速度是多少？', options: ['A. 2 m/s²', 'B. 4 m/s²', 'C. 5 m/s²',
-                    'D. 100 m/s²'
-                ], answer: 1, explanation: 'F = ma → a = F/m = 20/5 = 4 m/s²', tags: ['牛頓第二定律'] },
-            { id: 'q006', topic: 'mechanics', subtopic: '圓周運動', type: 'MC', difficulty: 'hard',
-                stem: '一物體以勻速做圓周運動，下列哪項正確？', options: ['A. 速度不變', 'B. 加速度為零', 'C. 向心力不做功', 'D. 動能不斷改變'],
-                answer: 2,
-                explanation: '向心力始終垂直於運動方向，故不做功。速度方向持續改變（雖然速率不變），故有向心加速度，動能保持不變（勻速）。',
-                tags: ['圓周運動', '向心力'] },
-            { id: 'q007', topic: 'mechanics', subtopic: '動量', type: 'LQ', difficulty: 'hard',
-                stem: '兩輛小車在光滑平面上發生碰撞。小車A質量2kg以3m/s向右運動，小車B質量1kg靜止。若碰撞後兩車黏在一起，求共同速度。', answer: 'sample',
-                explanation: '動量守恆：mAvA + mBvB = (mA+mB)v → 2×3 + 0 = 3v → v = 2 m/s 向右。關鍵：系統動量守恆。',
-                tags: ['動量守恆', '碰撞'] },
-            // Waves
-            { id: 'q008', topic: 'waves', subtopic: '波的性質', type: 'MC', difficulty: 'easy',
-                stem: '波速為 340 m/s，頻率為 170 Hz，波長是多少？', options: ['A. 0.5 m', 'B. 1 m', 'C. 2 m', 'D. 4 m'],
-                answer: 2, explanation: 'v = fλ → λ = v/f = 340/170 = 2m', tags: ['波速', '波長'] },
-            { id: 'q009', topic: 'waves', subtopic: '光的折射', type: 'MC', difficulty: 'medium',
-                stem: '光從空氣射入玻璃（n=1.5），入射角為30°，折射角約為？(sin30°=0.5)', options: ['A. 19.5°', 'B. 30°', 'C. 48.6°',
-                    'D. 60°'
-                ], answer: 0, explanation: 'n₁sinθ₁=n₂sinθ₂ → 1×0.5=1.5×sinθ₂ → sinθ₂≈0.333 → θ₂≈19.5°',
-                tags: ['折射定律'] },
-            { id: 'q010', topic: 'waves', subtopic: '多普勒效應', type: 'MC', difficulty: 'medium',
-                stem: '當聲源向觀察者移動時，觀察者聽到的聲音頻率會：', options: ['A. 變低', 'B. 不變', 'C. 變高', 'D. 先高後低'], answer: 2,
-                explanation: '聲源靠近→波長被壓縮→頻率變高。這就是多普勒效應。', tags: ['多普勒效應'] },
-            // EM
-            { id: 'q011', topic: 'em', subtopic: '電路', type: 'MC', difficulty: 'easy',
-                stem: '兩個10Ω電阻並聯，等效電阻是多少？', options: ['A. 20Ω', 'B. 10Ω', 'C. 5Ω', 'D. 0Ω'], answer: 2,
-                explanation: '1/R = 1/10 + 1/10 = 2/10 → R = 5Ω', tags: ['並聯電阻'] },
-            { id: 'q012', topic: 'em', subtopic: '電磁感應', type: 'MC', difficulty: 'hard',
-                stem: '根據楞次定律，當磁鐵插入線圈時，感應電流產生的磁場會：', options: ['A. 加強原磁場', 'B. 反抗磁通量變化', 'C. 與原磁場同向',
-                    'D. 為零'
-                ], answer: 1, explanation: '楞次定律：感應電流的方向總是反抗引起它的磁通量變化。', tags: ['楞次定律'] },
-            { id: 'q013', topic: 'em', subtopic: '家居用電', type: 'LQ', difficulty: 'easy',
-                stem: '解釋為什麼家居電器使用並聯而非串聯連接。', answer: 'sample',
-                explanation: '並聯：每個電器獲得相同電壓(220V)，獨立開關不影響其他電器。串聯則電壓分攤，一電器關閉全部斷路。', tags: ['家居用電', '並聯'] },
-            // Nuclear
-            { id: 'q014', topic: 'nuclear', subtopic: '半衰期', type: 'MC', difficulty: 'medium',
-                stem: '某放射性物質半衰期為3小時，初始有800個原子核，9小時後剩下多少？', options: ['A. 400', 'B. 200', 'C. 100', 'D. 50'],
-                answer: 2, explanation: '9小時=3個半衰期 → 800→400→200→100', tags: ['半衰期'] },
-            { id: 'q015', topic: 'nuclear', subtopic: '衰變', type: 'MC', difficulty: 'easy',
-                stem: 'β衰變中，原子序會如何變化？', options: ['A. 增加1', 'B. 減少1', 'C. 不變', 'D. 減少2'], answer: 0,
-                explanation: 'β衰變：中子→質子+電子，原子序+1，質量數不變。', tags: ['β衰變'] },
-            // More questions
-            { id: 'q016', topic: 'mechanics', subtopic: '功與能量', type: 'MC', difficulty: 'medium',
-                stem: '將質量2kg的物體提升5m，需要做多少功？(g=10m/s²)', options: ['A. 10J', 'B. 50J', 'C. 100J', 'D. 200J'],
-                answer: 2, explanation: 'W = mgh = 2×10×5 = 100J', tags: ['功', '重力勢能'] },
-            { id: 'q017', topic: 'waves', subtopic: '透鏡', type: 'MC', difficulty: 'medium',
-                stem: '凸透鏡對平行於主軸的光線會：', options: ['A. 發散', 'B. 會聚到焦點', 'C. 平行射出', 'D. 反射回去'], answer: 1,
-                explanation: '凸透鏡（會聚透鏡）將平行光會聚到焦點。', tags: ['凸透鏡'] },
-            { id: 'q018', topic: 'em', subtopic: '靜電', type: 'MC', difficulty: 'easy',
-                stem: '用毛皮摩擦塑膠棒後，塑膠棒帶什麼電？', options: ['A. 正電', 'B. 負電', 'C. 不帶電', 'D. 不一定'], answer: 1,
-                explanation: '毛皮摩擦塑膠棒，電子從毛皮轉移到塑膠棒，塑膠棒帶負電。', tags: ['靜電'] },
-            { id: 'q019', topic: 'mechanics', subtopic: '引力', type: 'MC', difficulty: 'hard',
-                stem: '兩物體間引力與距離的關係是：', options: ['A. 正比於距離', 'B. 反比於距離', 'C. 反比於距離平方', 'D. 正比於距離平方'], answer: 2,
-                explanation: '萬有引力定律：F = Gm₁m₂/r²，引力與距離平方成反比。', tags: ['萬有引力'] },
-            { id: 'q020', topic: 'heat', subtopic: '物態變化', type: 'MC', difficulty: 'easy',
-                stem: '冰融化過程中，溫度如何變化？', options: ['A. 持續上升', 'B. 保持0°C不變', 'C. 先升後降', 'D. 持續下降'], answer: 1,
-                explanation: '相變過程中溫度保持不變（熔點），吸收的潛熱用於打破晶體結構。', tags: ['熔化', '潛熱'] },
-            { id: 'q021', topic: 'nuclear', subtopic: '核能應用', type: 'LQ', difficulty: 'medium',
-                stem: '簡述核裂變與核聚變的區別，並各舉一個應用例子。', answer: 'sample',
-                explanation: '核裂變：重核分裂成較輕核（如鈾-235裂變），用於核電站。核聚變：輕核結合成重核（如氫聚變），用於氫彈及恆星能量來源。', tags: [
-                    '核裂變', '核聚變'
-                ] },
-            { id: 'q022', topic: 'waves', subtopic: '聲音', type: 'MC', difficulty: 'easy',
-                stem: '聲音在以下哪種介質中傳播最快？', options: ['A. 空氣', 'B. 水', 'C. 鋼鐵', 'D. 真空'], answer: 2,
-                explanation: '聲音在固體中傳播最快（分子排列緊密），在真空中無法傳播。', tags: ['聲速'] },
-            { id: 'q023', topic: 'mechanics', subtopic: '力矩', type: 'MC', difficulty: 'medium',
-                stem: '力矩的公式是：', options: ['A. F×v', 'B. F×d (垂直距離)', 'C. m×a', 'D. F/d'], answer: 1,
-                explanation: '力矩 τ = F × d_perpendicular，即力乘以垂直距離。', tags: ['力矩'] },
-            { id: 'q024', topic: 'em', subtopic: '交流電', type: 'MC', difficulty: 'medium',
-                stem: '香港市電的電壓和頻率是：', options: ['A. 110V / 50Hz', 'B. 220V / 50Hz', 'C. 220V / 60Hz',
-                'D. 110V / 60Hz'], answer: 1, explanation: '香港市電標準為220V、50Hz交流電。', tags: ['交流電'] },
-            { id: 'q025', topic: 'heat', subtopic: '溫度與內能', type: 'LQ', difficulty: 'easy',
-                stem: '區分「溫度」與「內能」這兩個概念。', answer: 'sample',
-                explanation: '溫度：物體冷熱程度的量度，反映分子平均動能。內能：系統內全部分子的動能與勢能總和，取決於溫度、質量和物態。', tags: ['溫度', '內能'] },
-        ];
-
-        // ==================== 全域狀態 ====================
-        let appState = {
-            currentPage: 'dashboard',
-            currentContentTopic: null,
-            isPracticing: false,
-            practiceQuestions: [],
-            practiceIndex: 0,
-            practiceAnswers: [],
-            practiceTimer: 0,
-            timerInterval: null,
-            timerPaused: false,
-            selectedElectives: ['E1', 'E2', 'E3', 'E4'],
-            floatNoteTopic: null,
-            sidebarOpen: false,
-            searchIndex: [],
-        };
-
-        // ==================== LOCALSTORAGE 工具 ====================
-        const LS = {
-            get(key, fallback = null) {
-                try { const v = localStorage.getItem('dse_phy_' + key); return v ? JSON.parse(v) :
-                    fallback; } catch (e) { return fallback; }
-            },
-            set(key, value) {
-                try { localStorage.setItem('dse_phy_' + key, JSON.stringify(value)); } catch (e) {
-                    showToast('儲存空間不足，請清理數據'); }
-            },
-            remove(key) { localStorage.removeItem('dse_phy_' + key); },
-            getAllKeys() {
-                const keys = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const k = localStorage.key(i);
-                    if (k.startsWith('dse_phy_')) keys.push(k.replace('dse_phy_', ''));
-                }
-                return keys;
-            }
-        };
-
-        function getWrongBook() { return LS.get('wrongBook', []); }
-
-        function saveWrongBook(data) { LS.set('wrongBook', data);
-            updateWrongBadge(); }
-
-        function getFavorites() { return LS.get('favorites', []); }
-
-        function saveFavorites(data) { LS.set('favorites', data); }
-
-        function getNotes() { return LS.get('notes', {}); }
-
-        function saveNotes(data) { LS.set('notes', data); }
-
-        function getProgress() { return LS.get('progress', { completedChapters: [], practiceHistory: [],
-                dailyLog: {} }); }
-
-        function saveProgress(data) { LS.set('progress', data); }
-
-        function getSettings() { return LS.get('settings', { electives: ['E1', 'E2', 'E3', 'E4'] }); }
-
-        function saveSettings(data) { LS.set('settings', data); }
-
-        function getHighlights() { return LS.get('highlights', {}); }
-
-        function saveHighlights(data) { LS.set('highlights', data); }
-
-        // ==================== TOAST ====================
-        function showToast(msg, duration = 2000) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.style.opacity = '1';
-            clearTimeout(t._timeout);
-            t._timeout = setTimeout(() => { t.style.opacity = '0'; }, duration);
-        }
-
-        // ==================== 更新狀態 ====================
-        function updateLastSaveTime() {
-            const now = new Date();
-            const ts = now.toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' });
-            document.getElementById('lastSaveTime').textContent = ts;
-            document.getElementById('bottomLastSave').textContent = ts;
-        }
-
-        function updateWrongBadge() {
-            const count = getWrongBook().length;
-            const badge = document.getElementById('wrongCountBadge');
-            badge.textContent = count;
-            badge.style.display = count > 0 ? 'inline' : 'none';
-        }
-
-        function updateStatusDot() {
-            const online = navigator.onLine;
-            const dot = document.getElementById('statusDot');
-            const dot2 = document.getElementById('bottomStatusDot');
-            const txt = document.getElementById('statusText');
-            const txt2 = document.getElementById('bottomStatusText');
-            if (!online) {
-                dot.classList.add('offline');
-                dot2.style.background = '#f59e0b';
-                txt.textContent = '離線模式';
-                txt2.textContent = '離線模式';
-            } else {
-                dot.classList.remove('offline');
-                dot2.style.background = '#22c55e';
-                txt.textContent = '在線 · 離線可用';
-                txt2.textContent = '就緒';
-            }
-        }
-
-        // ==================== 導航 ====================
-        function navigateTo(pageName, topicKey = null) {
-            appState.currentPage = pageName;
-            appState.currentContentTopic = topicKey;
-            // Update sidebar active
-            document.querySelectorAll('#sidebarNav .nav-item').forEach(el => el.classList.remove('active'));
-            const navItem = document.querySelector(`[data-page="${pageName}"]`);
-            if (navItem) navItem.classList.add('active');
-            // Update pages
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            const pageEl = document.getElementById('page-' + pageName);
-            if (pageEl) pageEl.classList.add('active');
-            document.getElementById('pageContainer').scrollTop = 0;
-            // If content page
-            if (pageName === 'content' && topicKey) {
-                renderContentPage(topicKey);
-            }
-            // Refresh dynamic pages
-            if (pageName === 'wrongbook') renderWrongBook();
-            if (pageName === 'favorites') renderFavorites();
-            if (pageName === 'notes') renderNotesList();
-            if (pageName === 'dashboard') refreshDashboard();
-            if (pageName === 'practice') resetPracticeUI();
-            // Close sidebar on mobile
-            if (window.innerWidth <= 768) {
-                document.getElementById('sidebar').classList.remove('open');
-                appState.sidebarOpen = false;
-            }
-            updateLastSaveTime();
-        }
-
-        function renderContentPage(topicKey) {
-            const area = document.getElementById('contentArea');
-            let content = '';
-            // Search in compulsory
-            for (const [ckey, ch] of Object.entries(COURSE_STRUCTURE.compulsory.chapters)) {
-                if (ckey === topicKey) {
-                    content = ch.content;
-                    break;
-                }
-            }
-            // Search in elective
-            if (!content) {
-                for (const [ekey, ch] of Object.entries(COURSE_STRUCTURE.elective.chapters)) {
-                    if (ekey === topicKey) {
-                        content = ch.content;
-                        break;
-                    }
-                }
-            }
-            if (!content) content = '<p>內容載入中...</p>';
-            // Add interactivity buttons
-            const chTitle = getChapterTitle(topicKey);
-            content += `
-            <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn btn-success btn-sm" onclick="markChapterComplete('${topicKey}')">✅ 標記完成</button>
-                <button class="btn btn-primary btn-sm" onclick="startPracticeFromTopic('${topicKey}')">📝 做此課題練習</button>
-                <button class="btn btn-outline btn-sm" onclick="openFloatNote('${topicKey}')">📝 添加筆記</button>
-                <button class="btn btn-ghost btn-sm" onclick="toggleSimulator('${topicKey}')">🔬 互動模擬</button>
-            </div>
-            <div id="simulatorContainer" style="margin-top:12px;"></div>
-            <div style="margin-top:12px;font-size:.8rem;color:var(--text-secondary);">
-                課題：${chTitle} | <span onclick="navigateTo('practice')" style="cursor:pointer;color:var(--primary);">前往練習中心</span>
-            </div>
-            `;
-            area.innerHTML = content;
-            // Apply highlights
-            applyHighlights(topicKey);
-            // Setup text selection highlighting
-            setupTextHighlighting(topicKey);
-        }
-
-        function getChapterTitle(key) {
-            for (const [ck, ch] of Object.entries(COURSE_STRUCTURE.compulsory.chapters)) {
-                if (ck === key) return ch.title;
-            }
-            for (const [ek, ch] of Object.entries(COURSE_STRUCTURE.elective.chapters)) {
-                if (ek === key) return ch.title;
-            }
-            return key;
-        }
-
-        function markChapterComplete(topicKey) {
-            const progress = getProgress();
-            if (!progress.completedChapters.includes(topicKey)) {
-                progress.completedChapters.push(topicKey);
-                saveProgress(progress);
-                showToast('✅ 已標記為完成！');
-                logDailyActivity();
-            } else {
-                showToast('此章節已標記完成');
-            }
-            refreshDashboard();
-        }
-
-        function startPracticeFromTopic(topicKey) {
-            navigateTo('practice');
-            document.getElementById('practiceTopic').value = topicKey;
-            setTimeout(() => {
-                document.getElementById('btnStartPractice').click();
-            }, 300);
-        }
-
-        function openFloatNote(topicKey) {
-            appState.floatNoteTopic = topicKey;
-            const existingNotes = getNotes();
-            document.getElementById('floatNoteText').value = existingNotes[topicKey] || '';
-            document.getElementById('floatNoteContext').textContent = '課題：' + getChapterTitle(topicKey);
-            document.getElementById('floatNote').style.display = 'block';
-        }
-
-        function toggleSimulator(topicKey) {
-            const container = document.getElementById('simulatorContainer');
-            if (container.innerHTML && container.style.display !== 'none') {
-                container.innerHTML = '';
-                return;
-            }
-            if (topicKey === 'mechanics') {
-                container.innerHTML = `
-                <div class="card"><div class="card-header">🔬 拋體運動模擬器</div>
-                <div class="sim-container"><canvas id="simCanvas" width="600" height="350"></canvas></div>
-                <div class="sim-controls">
-                    <label>初速: <input type="range" id="simSpeed" min="10" max="80" value="40"> <span id="simSpeedVal">40</span> m/s</label>
-                    <label>角度: <input type="range" id="simAngle" min="10" max="80" value="45"> <span id="simAngleVal">45</span>°</label>
-                    <button class="btn btn-primary btn-sm" id="btnSimLaunch">🚀 發射</button>
-                </div></div>`;
-                setTimeout(() => setupProjectileSimulator(), 100);
-            } else if (topicKey === 'heat') {
-                container.innerHTML = `
-                <div class="card"><div class="card-header">🔬 氣體分子運動模型</div>
-                <div class="sim-container"><canvas id="simCanvas" width="600" height="300"></canvas></div>
-                <div class="sim-controls">
-                    <label>溫度: <input type="range" id="simTemp" min="50" max="300" value="150"> <span id="simTempVal">150</span> K</label>
-                    <button class="btn btn-primary btn-sm" id="btnSimGas">更新</button>
-                </div></div>`;
-                setTimeout(() => setupGasSimulator(), 100);
-            } else {
-                container.innerHTML =
-                    '<div class="card"><p style="color:var(--text-secondary);">此課題的互動模擬器正在開發中...</p></div>';
-            }
-        }
-
-        function setupProjectileSimulator() {
-            const canvas = document.getElementById('simCanvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const speedSlider = document.getElementById('simSpeed');
-            const angleSlider = document.getElementById('simAngle');
-            document.getElementById('simSpeedVal').textContent = speedSlider.value;
-            document.getElementById('simAngleVal').textContent = angleSlider.value;
-            speedSlider.oninput = () => document.getElementById('simSpeedVal').textContent = speedSlider.value;
-            angleSlider.oninput = () => document.getElementById('simAngleVal').textContent = angleSlider.value;
-
-            function draw(speed, angle) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const g = 9.81;
-                const rad = angle * Math.PI / 180;
-                const vx = speed * Math.cos(rad);
-                const vy = speed * Math.sin(rad);
-                const totalTime = 2 * vy / g;
-                const scale = 3;
-                // Ground
-                ctx.strokeStyle = '#94a3b8';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(30, canvas.height - 40);
-                ctx.lineTo(canvas.width - 20, canvas.height - 40);
-                ctx.stroke();
-                // Trajectory
-                ctx.strokeStyle = '#4a6cf7';
-                ctx.lineWidth = 2.5;
-                ctx.beginPath();
-                let firstPoint = true;
-                for (let t = 0; t <= totalTime; t += totalTime / 100) {
-                    const x = 40 + vx * t * scale;
-                    const y = canvas.height - 40 - (vy * t - 0.5 * g * t * t) * scale;
-                    if (y > canvas.height - 35) break;
-                    if (firstPoint) { ctx.moveTo(x, y);
-                        firstPoint = false; } else ctx.lineTo(x, y);
-                }
-                ctx.stroke();
-                // Labels
-                ctx.fillStyle = '#1e293b';
-                ctx.font = '12px Inter, sans-serif';
-                ctx.fillText(`初速=${speed}m/s  角度=${angle}°  射程≈${Math.round(vx*totalTime)}m`, 40, 25);
-            }
-            draw(parseInt(speedSlider.value), parseInt(angleSlider.value));
-            document.getElementById('btnSimLaunch').onclick = () => {
-                draw(parseInt(speedSlider.value), parseInt(angleSlider.value));
-            };
-        }
-
-        function setupGasSimulator() {
-            const canvas = document.getElementById('simCanvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const tempSlider = document.getElementById('simTemp');
-            document.getElementById('simTempVal').textContent = tempSlider.value;
-            tempSlider.oninput = () => document.getElementById('simTempVal').textContent = tempSlider.value;
-
-            function draw(temp) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const numParticles = Math.floor(temp / 3) + 10;
-                const speed = Math.sqrt(temp) * 0.4;
-                // Box
-                ctx.strokeStyle = '#64748b';
-                ctx.lineWidth = 3;
-                ctx.strokeRect(50, 30, canvas.width - 100, canvas.height - 60);
-                // Particles
-                const particles = [];
-                for (let i = 0; i < numParticles; i++) {
-                    particles.push({
-                        x: 60 + Math.random() * (canvas.width - 120),
-                        y: 40 + Math.random() * (canvas.height - 80),
-                        vx: (Math.random() - 0.5) * speed,
-                        vy: (Math.random() - 0.5) * speed,
-                    });
-                }
-                // Animation loop
-                let frame = 0;
-                const maxFrames = 120;
-
-                function animate() {
-                    if (frame >= maxFrames) return;
-                    frame++;
-                    ctx.clearRect(52, 32, canvas.width - 104, canvas.height - 64);
-                    ctx.strokeStyle = '#64748b';
-                    ctx.lineWidth = 3;
-                    ctx.strokeRect(50, 30, canvas.width - 100, canvas.height - 60);
-                    particles.forEach(p => {
-                        p.x += p.vx;
-                        p.y += p.vy;
-                        if (p.x <= 55 || p.x >= canvas.width - 55) p.vx *= -1;
-                        if (p.y <= 35 || p.y >= canvas.height - 35) p.vy *= -1;
-                        p.x = Math.max(55, Math.min(canvas.width - 55, p.x));
-                        p.y = Math.max(35, Math.min(canvas.height - 35, p.y));
-                        ctx.fillStyle = '#ef4444';
-                        ctx.beginPath();
-                        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-                        ctx.fill();
-                    });
-                    ctx.fillStyle = '#1e293b';
-                    ctx.font = '12px Inter, sans-serif';
-                    ctx.fillText(`溫度: ${temp}K  分子數: ${numParticles}  平均速率≈${speed.toFixed(1)}`, 60,
-                    canvas.height - 10);
-                    requestAnimationFrame(animate);
-                }
-                animate();
-            }
-            draw(parseInt(tempSlider.value));
-            document.getElementById('btnSimGas').onclick = () => {
-                draw(parseInt(tempSlider.value));
-            };
-        }
-
-        function applyHighlights(topicKey) {
-            const highlights = getHighlights();
-            const topicHL = highlights[topicKey] || [];
-            const area = document.getElementById('contentArea');
-            topicHL.forEach(hl => {
-                const regex = new RegExp(hl.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-                area.innerHTML = area.innerHTML.replace(regex,
-                    match => `<span class="highlighted-text">${match}</span>`);
-            });
-        }
-
-        function setupTextHighlighting(topicKey) {
-            const area = document.getElementById('contentArea');
-            area.onmouseup = () => {
-                const selection = window.getSelection();
-                if (selection && selection.toString().trim().length > 0) {
-                    const text = selection.toString().trim();
-                    const highlights = getHighlights();
-                    if (!highlights[topicKey]) highlights[topicKey] = [];
-                    if (!highlights[topicKey].find(h => h.text === text)) {
-                        highlights[topicKey].push({ text, date: new Date().toISOString() });
-                        saveHighlights(highlights);
-                        showToast('✨ 已標記螢光筆重點');
-                        renderContentPage(topicKey);
-                    }
-                }
-            };
-        }
-
-        // ==================== DASHBOARD ====================
-        function refreshDashboard() {
-            const progress = getProgress();
-            const history = progress.practiceHistory || [];
-            document.getElementById('statTotalPractices').textContent = history.length;
-            const recentScores = history.slice(-10).map(h => h.score);
-            if (recentScores.length > 0) {
-                const avg = Math.round(recentScores.reduce((a, b) => a + b, 0) / recentScores.length);
-                document.getElementById('statAvgScore').textContent = avg + '%';
-            } else {
-                document.getElementById('statAvgScore').textContent = '-';
-            }
-            document.getElementById('statCompleted').textContent = (progress.completedChapters || []).length;
-            document.getElementById('statStreak').textContent = calculateStreak(progress.dailyLog || {});
-            // Score chart
-            drawScoreChart(recentScores);
-            // Radar chart
-            drawRadarChart();
-            updateLastSaveTime();
-        }
-
-        function calculateStreak(dailyLog) {
-            let streak = 0;
-            const today = new Date();
-            for (let i = 0; i < 365; i++) {
-                const d = new Date(today);
-                d.setDate(d.getDate() - i);
-                const key = d.toISOString().split('T')[0];
-                if (dailyLog[key]) streak++;
-                else break;
-            }
-            return streak;
-        }
-
-        function logDailyActivity() {
-            const progress = getProgress();
-            const today = new Date().toISOString().split('T')[0];
-            if (!progress.dailyLog) progress.dailyLog = {};
-            progress.dailyLog[today] = true;
-            saveProgress(progress);
-            refreshDashboard();
-        }
-
-        let scoreChartInstance = null;
-
-        function drawScoreChart(scores) {
-            const canvas = document.getElementById('scoreChart');
-            const ctx = canvas.getContext('2d');
-            const msgEl = document.getElementById('chartEmptyMsg');
-            if (scoreChartInstance) { scoreChartInstance.destroy();
-                scoreChartInstance = null; }
-            if (scores.length === 0) {
-                msgEl.style.display = 'block';
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                return;
-            }
-            msgEl.style.display = 'none';
-            scoreChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: scores.map((_, i) => `#${i+1}`),
-                    datasets: [{
-                        label: '分數 (%)',
-                        data: scores,
-                        borderColor: '#4a6cf7',
-                        backgroundColor: 'rgba(74,108,247,0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 5,
-                        pointBackgroundColor: '#4a6cf7',
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } }
-                }
-            });
-            canvas.parentElement.style.height = '200px';
-        }
-
-        let radarChartInstance = null;
-
-        function drawRadarChart() {
-            const canvas = document.getElementById('radarChart');
-            const ctx = canvas.getContext('2d');
-            const msgEl = document.getElementById('radarEmptyMsg');
-            const progress = getProgress();
-            const history = progress.practiceHistory || [];
-            // Calculate per-topic accuracy
-            const topicScores = {};
-            history.forEach(h => {
-                if (h.topicScores) {
-                    for (const [topic, sc] of Object.entries(h.topicScores)) {
-                        if (!topicScores[topic]) topicScores[topic] = { total: 0, count: 0 };
-                        topicScores[topic].total += sc;
-                        topicScores[topic].count += 1;
-                    }
-                }
-            });
-            const labels = Object.keys(topicScores);
-            const data = labels.map(k => Math.round(topicScores[k].total / topicScores[k].count));
-            if (radarChartInstance) { radarChartInstance.destroy();
-                radarChartInstance = null; }
-            if (labels.length < 2) {
-                msgEl.style.display = 'block';
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                return;
-            }
-            msgEl.style.display = 'none';
-            radarChartInstance = new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: labels.map(l => getChapterTitle(l) || l),
-                    datasets: [{
-                        label: '正確率 (%)',
-                        data: data,
-                        borderColor: '#f97316',
-                        backgroundColor: 'rgba(249,115,22,0.15)',
-                        pointBackgroundColor: '#f97316',
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { r: { min: 0, max: 100, ticks: { stepSize: 25 } } },
-                    plugins: { legend: { display: false } }
-                }
-            });
-            canvas.parentElement.style.height = '220px';
-        }
-
-        // ==================== PRACTICE ====================
-        function resetPracticeUI() {
-            document.getElementById('practiceSetup').style.display = 'block';
-            document.getElementById('practiceArea').style.display = 'none';
-            document.getElementById('practiceResult').style.display = 'none';
-            document.getElementById('practiceTimer').textContent = '00:00';
-            document.getElementById('practiceTimer').classList.remove('warning');
-            appState.isPracticing = false;
-            appState.practiceQuestions = [];
-            appState.practiceIndex = 0;
-            appState.practiceAnswers = [];
-            appState.practiceTimer = 0;
-            if (appState.timerInterval) clearInterval(appState.timerInterval);
-            populateTopicSelect();
-        }
-
-        function populateTopicSelect() {
-            const sel = document.getElementById('practiceTopic');
-            const wrongSel = document.getElementById('wrongFilterTopic');
-            if (sel.options.length > 1) return; // Already populated
-            sel.innerHTML = '<option value="all">全部課題</option>';
-            wrongSel.innerHTML = '<option value="all">全部課題</option>';
-            for (const [key, ch] of Object.entries(COURSE_STRUCTURE.compulsory.chapters)) {
-                sel.innerHTML += `<option value="${key}">${ch.title}</option>`;
-                wrongSel.innerHTML += `<option value="${key}">${ch.title}</option>`;
-            }
-            const electives = getSettings().electives || ['E1', 'E2', 'E3', 'E4'];
-            for (const [key, ch] of Object.entries(COURSE_STRUCTURE.elective.chapters)) {
-                if (electives.includes(key)) {
-                    sel.innerHTML += `<option value="${key}">${ch.title}</option>`;
-                    wrongSel.innerHTML += `<option value="${key}">${ch.title}</option>`;
-                }
-            }
-        }
-
-        function startPractice() {
-            const topic = document.getElementById('practiceTopic').value;
-            const type = document.getElementById('practiceType').value;
-            const difficulty = document.getElementById('practiceDifficulty').value;
-            const count = parseInt(document.getElementById('practiceCount').value);
-            // Filter questions
-            let pool = [...QUESTION_BANK];
-            if (topic !== 'all') pool = pool.filter(q => q.topic === topic);
-            if (type !== 'all') pool = pool.filter(q => q.type === type);
-            if (difficulty !== 'all') pool = pool.filter(q => q.difficulty === difficulty);
-            if (pool.length === 0) {
-                showToast('沒有符合條件的題目，請調整篩選條件');
-                return;
-            }
-            // Shuffle and pick
-            const shuffled = pool.sort(() => Math.random() - 0.5);
-            appState.practiceQuestions = shuffled.slice(0, Math.min(count, shuffled.length));
-            appState.practiceIndex = 0;
-            appState.practiceAnswers = new Array(appState.practiceQuestions.length).fill(null);
-            appState.isPracticing = true;
-            appState.practiceTimer = 0;
-            document.getElementById('practiceSetup').style.display = 'none';
-            document.getElementById('practiceArea').style.display = 'block';
-            document.getElementById('practiceResult').style.display = 'none';
-            document.getElementById('practiceTimer').textContent = '00:00';
-            document.getElementById('practiceTimer').classList.remove('warning');
-            startTimer();
-            renderPracticeQuestion();
-            logDailyActivity();
-        }
-
-        function startTimer() {
-            if (appState.timerInterval) clearInterval(appState.timerInterval);
-            appState.timerPaused = false;
-            document.getElementById('btnPauseTimer').textContent = '⏯️ 暫停';
-            appState.timerInterval = setInterval(() => {
-                if (!appState.timerPaused) {
-                    appState.practiceTimer++;
-                    const mins = Math.floor(appState.practiceTimer / 60);
-                    const secs = appState.practiceTimer % 60;
-                    const display = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2,
-                        '0');
-                    document.getElementById('practiceTimer').textContent = display;
-                    if (appState.practiceTimer > 600) document.getElementById('practiceTimer').classList
-                        .add('warning');
-                }
-            }, 1000);
-        }
-
-        function pauseTimer() {
-            appState.timerPaused = !appState.timerPaused;
-            document.getElementById('btnPauseTimer').textContent = appState.timerPaused ? '▶️ 繼續' : '⏯️ 暫停';
-        }
-
-        function renderPracticeQuestion() {
-            const area = document.getElementById('practiceArea');
-            const idx = appState.practiceIndex;
-            const total = appState.practiceQuestions.length;
-            if (idx >= total) {
-                finishPractice();
-                return;
-            }
-            const q = appState.practiceQuestions[idx];
-            const progressPct = Math.round((idx / total) * 100);
-            let html = `
-            <div class="progress-bar"><div class="fill" style="width:${progressPct}%"></div></div>
-            <p style="font-size:.85rem;color:var(--text-secondary);">題目 ${idx+1} / ${total} | 課題：${getChapterTitle(q.topic)} | 難度：<span class="tag tag-${q.difficulty}">${q.difficulty}</span> | 題型：<span class="tag tag-${q.type.toLowerCase()}">${q.type}</span></p>
-            <div class="quiz-card">
-                <div class="q-number">#${idx+1}</div>
-                <div class="q-stem">${q.stem}</div>`;
-            if (q.type === 'MC') {
-                q.options.forEach((opt, oi) => {
-                    const selected = appState.practiceAnswers[idx] === oi;
-                    html +=
-                        `<div class="option${selected?' selected':''}" onclick="selectMCAnswer(${idx}, ${oi})">${opt}</div>`;
-                });
-            } else {
-                html +=
-                    `<textarea id="lqAnswer${idx}" placeholder="請輸入你的答案..." onchange="saveLQAnswer(${idx}, this.value)">${appState.practiceAnswers[idx]||''}</textarea>`;
-                html +=
-                    `<button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="showLQHint(${idx})">💡 顯示參考答案比對</button>`;
-                html += `<div id="lqHint${idx}" style="display:none;margin-top:8px;padding:10px;background:#f0fdf4;border-radius:6px;font-size:.85rem;">
-                <strong>參考答案要點：</strong><br>${q.explanation}</div>`;
-            }
-            html += `</div>
-            <div style="display:flex;gap:8px;margin-top:8px;">
-                <button class="btn btn-primary btn-sm" onclick="submitAnswer(${idx})">✅ 提交答案</button>
-                <button class="btn btn-ghost btn-sm" onclick="skipQuestion()">⏭️ 跳過</button>
-                <button class="btn btn-outline btn-sm" onclick="toggleFavorite('${q.id}')">⭐ 收藏</button>
-            </div>
-            <div id="feedback${idx}" style="margin-top:8px;"></div>`;
-            area.innerHTML = html;
-            document.getElementById('pageContainer').scrollTop = 0;
-        }
-
-        function selectMCAnswer(qIdx, optIdx) {
-            appState.practiceAnswers[qIdx] = optIdx;
-            renderPracticeQuestion();
-        }
-
-        function saveLQAnswer(qIdx, value) {
-            appState.practiceAnswers[qIdx] = value;
-        }
-
-        function showLQHint(qIdx) {
-            const hintEl = document.getElementById('lqHint' + qIdx);
-            if (hintEl) hintEl.style.display = 'block';
-        }
-
-        function submitAnswer(idx) {
-            const q = appState.practiceQuestions[idx];
-            const feedbackEl = document.getElementById('feedback' + idx);
-            if (!feedbackEl) return;
-            if (q.type === 'MC') {
-                const userAns = appState.practiceAnswers[idx];
-                if (userAns === null) { showToast('請先選擇答案'); return; }
-                const isCorrect = userAns === q.answer;
-                feedbackEl.innerHTML = `
-                <div class="quiz-card" style="border-left:4px solid ${isCorrect?'var(--success)':'var(--danger)'};">
-                    <strong>${isCorrect?'✅ 正確！':'❌ 錯誤'}</strong>
-                    ${!isCorrect?`<p>你的答案：${q.options[userAns]}<br>正確答案：${q.options[q.answer]}</p>`:''}
-                    <div class="explanation show">${q.explanation}</div>
-                </div>`;
-                // Record
-                if (!isCorrect) addToWrongBook(q, userAns);
-                recordPracticeAnswer(q, isCorrect);
-                // Auto advance
-                setTimeout(() => {
-                    appState.practiceIndex++;
-                    renderPracticeQuestion();
-                }, 2000);
-            } else {
-                // LQ - show explanation for self-checking
-                feedbackEl.innerHTML = `
-                <div class="quiz-card" style="border-left:4px solid #f59e0b;">
-                    <strong>📝 請自行核對</strong>
-                    <div class="explanation show">${q.explanation}</div>
-                    <button class="btn btn-sm btn-success" style="margin-top:6px;" onclick="markLQCorrect(${idx})">✔ 我答對了</button>
-                    <button class="btn btn-sm btn-danger" style="margin-top:6px;margin-left:4px;" onclick="markLQWrong(${idx})">✘ 我答錯了</button>
-                </div>`;
-            }
-        }
-
-        function markLQCorrect(idx) {
-            const q = appState.practiceQuestions[idx];
-            recordPracticeAnswer(q, true);
-            appState.practiceIndex++;
-            renderPracticeQuestion();
-        }
-
-        function markLQWrong(idx) {
-            const q = appState.practiceQuestions[idx];
-            recordPracticeAnswer(q, false);
-            addToWrongBook(q, appState.practiceAnswers[idx] || '(未作答)');
-            appState.practiceIndex++;
-            renderPracticeQuestion();
-        }
-
-        function skipQuestion() {
-            appState.practiceIndex++;
-            renderPracticeQuestion();
-        }
-
-        function recordPracticeAnswer(q, isCorrect) {
-            const progress = getProgress();
-            if (!progress.practiceHistory) progress.practiceHistory = [];
-            const entry = {
-                date: new Date().toISOString(),
-                questionId: q.id,
-                topic: q.topic,
-                correct: isCorrect,
-                score: isCorrect ? 100 : 0,
-                topicScores: { [q.topic]: isCorrect ? 100 : 0 },
-            };
-            // Merge with current session
-            const lastEntry = progress.practiceHistory[progress.practiceHistory.length - 1];
-            if (lastEntry && lastEntry.date && new Date().toISOString().split('T')[0] === lastEntry.date.split(
-                    'T')[0] && lastEntry._session) {
-                lastEntry.score = Math.round((lastEntry.score * lastEntry._sessionTotal + (isCorrect ? 100 : 0)) / (
-                    lastEntry._sessionTotal + 1));
-                lastEntry._sessionTotal = (lastEntry._sessionTotal || 1) + 1;
-                if (!lastEntry.topicScores) lastEntry.topicScores = {};
-                if (!lastEntry.topicScores[q.topic]) lastEntry.topicScores[q.topic] = { total: 0, count: 0 };
-                lastEntry.topicScores[q.topic].total += isCorrect ? 100 : 0;
-                lastEntry.topicScores[q.topic].count += 1;
-                // Recalculate
-                const ts = lastEntry.topicScores;
-                for (const [t, v] of Object.entries(ts)) {
-                    ts[t] = Math.round(v.total / v.count);
-                }
-                progress.practiceHistory[progress.practiceHistory.length - 1] = lastEntry;
-            } else {
-                entry._session = true;
-                entry._sessionTotal = 1;
-                entry.topicScores = { [q.topic]: isCorrect ? 100 : 0 };
-                progress.practiceHistory.push(entry);
-            }
-            saveProgress(progress);
-        }
-
-        function addToWrongBook(q, userAnswer) {
-            const wb = getWrongBook();
-            if (!wb.find(w => w.questionId === q.id)) {
-                wb.push({
-                    questionId: q.id,
-                    question: q,
-                    userAnswer: typeof userAnswer === 'number' ? q.options[userAnswer] : String(userAnswer),
-                    correctAnswer: q.type === 'MC' ? q.options[q.answer] : q.explanation,
-                    date: new Date().toISOString(),
-                    errorType: 'concept',
-                    mastered: false,
-                });
-                saveWrongBook(wb);
-                showToast('📕 已加入錯題本');
-            }
-        }
-
-        function finishPractice() {
-            if (appState.timerInterval) clearInterval(appState.timerInterval);
-            appState.isPracticing = false;
-            document.getElementById('practiceArea').style.display = 'none';
-            const resultDiv = document.getElementById('practiceResult');
-            resultDiv.style.display = 'block';
-            const total = appState.practiceQuestions.length;
-            const answered = appState.practiceAnswers.filter(a => a !== null).length;
-            const timeMin = Math.floor(appState.practiceTimer / 60);
-            const timeSec = appState.practiceTimer % 60;
-            resultDiv.innerHTML = `
-            <div class="card" style="text-align:center;">
-                <h2>🎉 練習完成！</h2>
-                <p style="font-size:1.2rem;">用時：${timeMin}分${timeSec}秒 | 完成：${answered}/${total}題</p>
-                <button class="btn btn-primary" onclick="resetPracticeUI()">🔄 返回練習設定</button>
-                <button class="btn btn-outline" style="margin-left:8px;" onclick="navigateTo('wrongbook')">📕 查看錯題本</button>
-                <button class="btn btn-outline" style="margin-left:8px;" onclick="navigateTo('dashboard')">📊 查看儀表板</button>
-            </div>`;
-            document.getElementById('pageContainer').scrollTop = 0;
-            refreshDashboard();
-            updateLastSaveTime();
-        }
-
-        function toggleFavorite(qId) {
-            const favs = getFavorites();
-            const idx = favs.findIndex(f => f === qId);
-            if (idx >= 0) {
-                favs.splice(idx, 1);
-                showToast('已取消收藏');
-            } else {
-                favs.push(qId);
-                showToast('⭐ 已收藏');
-            }
-            saveFavorites(favs);
-        }
-
-        // ==================== WRONG BOOK ====================
-        function renderWrongBook() {
-            const wb = getWrongBook();
-            const filterTopic = document.getElementById('wrongFilterTopic')?.value || 'all';
-            const filterType = document.getElementById('wrongFilterType')?.value || 'all';
-            let filtered = wb.filter(w => !w.mastered);
-            if (filterTopic !== 'all') filtered = filtered.filter(w => w.question.topic === filterTopic);
-            if (filterType !== 'all') filtered = filtered.filter(w => w.errorType === filterType);
-            const listEl = document.getElementById('wrongBookList');
-            if (filtered.length === 0) {
-                listEl.innerHTML = '<p style="color:var(--text-secondary);">暫無錯題記錄 🎉</p>';
-                return;
-            }
-            listEl.innerHTML = filtered.map((w, i) => `
-            <div class="quiz-card" style="border-left:4px solid var(--danger);">
-                <p style="font-size:.8rem;color:var(--text-secondary);">${new Date(w.date).toLocaleDateString('zh-HK')} | ${getChapterTitle(w.question.topic)} | <span class="tag tag-${w.question.difficulty}">${w.question.difficulty}</span></p>
-                <p><strong>${w.question.stem}</strong></p>
-                <p style="color:var(--danger);">你的答案：${w.userAnswer}</p>
-                <p style="color:var(--success);">正確答案：${w.correctAnswer}</p>
-                <div class="explanation show">${w.question.explanation}</div>
-                <div style="margin-top:8px;display:flex;gap:6px;">
-                    <button class="btn btn-sm btn-primary" onclick="redoWrongQuestion('${w.questionId}')">🔄 重做</button>
-                    <button class="btn btn-sm btn-success" onclick="markMastered('${w.questionId}')">✅ 已掌握</button>
-                    <select onchange="changeErrorType('${w.questionId}', this.value)" style="padding:4px;border-radius:4px;font-size:.75rem;">
-                        <option value="concept" ${w.errorType==='concept'?'selected':''}>概念錯誤</option>
-                        <option value="calculation" ${w.errorType==='calculation'?'selected':''}>計算失誤</option>
-                    </select>
-                </div>
-            </div>`).join('');
-        }
-
-        function redoWrongQuestion(qId) {
-            const q = QUESTION_BANK.find(q => q.id === qId);
-            if (!q) return;
-            navigateTo('practice');
-            document.getElementById('practiceTopic').value = q.topic;
-            setTimeout(() => {
-                appState.practiceQuestions = [q];
-                appState.practiceIndex = 0;
-                appState.practiceAnswers = [null];
-                appState.isPracticing = true;
-                appState.practiceTimer = 0;
-                document.getElementById('practiceSetup').style.display = 'none';
-                document.getElementById('practiceArea').style.display = 'block';
-                document.getElementById('practiceResult').style.display = 'none';
-                document.getElementById('practiceTimer').textContent = '00:00';
-                startTimer();
-                renderPracticeQuestion();
-            }, 300);
-        }
-
-        function markMastered(qId) {
-            const wb = getWrongBook();
-            const entry = wb.find(w => w.questionId === qId);
-            if (entry) entry.mastered = true;
-            saveWrongBook(wb);
-            renderWrongBook();
-            showToast('已標記為掌握 ✅');
-        }
-
-        function changeErrorType(qId, newType) {
-            const wb = getWrongBook();
-            const entry = wb.find(w => w.questionId === qId);
-            if (entry) entry.errorType = newType;
-            saveWrongBook(wb);
-        }
-
-        function redoAllWrong() {
-            const wb = getWrongBook().filter(w => !w.mastered);
-            if (wb.length === 0) { showToast('沒有需要重做的錯題'); return; }
-            const questions = wb.map(w => QUESTION_BANK.find(q => q.id === w.questionId)).filter(Boolean);
-            if (questions.length === 0) { showToast('題庫已更新，部分錯題無法找到'); return; }
-            navigateTo('practice');
-            setTimeout(() => {
-                appState.practiceQuestions = questions;
-                appState.practiceIndex = 0;
-                appState.practiceAnswers = new Array(questions.length).fill(null);
-                appState.isPracticing = true;
-                appState.practiceTimer = 0;
-                document.getElementById('practiceSetup').style.display = 'none';
-                document.getElementById('practiceArea').style.display = 'block';
-                document.getElementById('practiceResult').style.display = 'none';
-                document.getElementById('practiceTimer').textContent = '00:00';
-                startTimer();
-                renderPracticeQuestion();
-            }, 300);
-        }
-
-        // ==================== FAVORITES ====================
-        function renderFavorites() {
-            const favs = getFavorites();
-            const listEl = document.getElementById('favoritesList');
-            if (favs.length === 0) {
-                listEl.innerHTML = '<p style="color:var(--text-secondary);">尚無收藏項目</p>';
-                return;
-            }
-            listEl.innerHTML = favs.map(qId => {
-                const q = QUESTION_BANK.find(q => q.id === qId);
-                if (!q) return '';
-                return `
-                <div class="quiz-card">
-                    <p><strong>${q.stem}</strong></p>
-                    <span class="tag tag-${q.difficulty}">${q.difficulty}</span>
-                    <span class="tag tag-${q.type.toLowerCase()}">${q.type}</span>
-                    <span style="font-size:.8rem;color:var(--text-secondary);">${getChapterTitle(q.topic)}</span>
-                    <button class="btn btn-sm btn-outline" style="margin-left:8px;" onclick="toggleFavorite('${q.id}');renderFavorites();">取消收藏</button>
-                </div>`;
-            }).join('');
-        }
-
-        // ==================== NOTES ====================
-        function renderNotesList() {
-            const notes = getNotes();
-            const listEl = document.getElementById('notesList');
-            const keys = Object.keys(notes);
-            if (keys.length === 0) {
-                listEl.innerHTML = '<p style="color:var(--text-secondary);">尚無筆記</p>';
-                return;
-            }
-            listEl.innerHTML = keys.map(k => `
-            <div class="card">
-                <div class="card-header">📝 ${getChapterTitle(k) || k}</div>
-                <p style="white-space:pre-wrap;font-size:.9rem;">${notes[k]}</p>
-                <button class="btn btn-sm btn-ghost" onclick="deleteNote('${k}')">🗑️ 刪除</button>
-            </div>`).join('');
-        }
-
-        function deleteNote(key) {
-            const notes = getNotes();
-            delete notes[key];
-            saveNotes(notes);
-            renderNotesList();
-            showToast('筆記已刪除');
-        }
-
-        // ==================== SEARCH ====================
-        function buildSearchIndex() {
-            const idx = [];
-            for (const [key, ch] of Object.entries(COURSE_STRUCTURE.compulsory.chapters)) {
-                idx.push({ type: 'chapter', key, title: ch.title, text: ch.title + ' ' + ch.topics.join(' ') });
-                ch.topics.forEach(t => idx.push({ type: 'topic', key, title: ch.title, text: t, topic: t }));
-            }
-            for (const [key, ch] of Object.entries(COURSE_STRUCTURE.elective.chapters)) {
-                idx.push({ type: 'chapter', key, title: ch.title, text: ch.title + ' ' + ch.topics.join(' ') });
-                ch.topics.forEach(t => idx.push({ type: 'topic', key, title: ch.title, text: t, topic: t }));
-            }
-            // Add formulas
-            const formulas = [
-                { key: 'mechanics', text: 'F=ma 牛頓第二定律', title: '力和運動' },
-                { key: 'mechanics', text: 'v=u+at 運動學', title: '力和運動' },
-                { key: 'heat', text: 'PV=nRT 理想氣體方程', title: '熱和氣體' },
-                { key: 'waves', text: 'v=fλ 波速公式', title: '波動' },
-                { key: 'em', text: 'V=IR 歐姆定律', title: '電和磁' },
-                { key: 'nuclear', text: 'N=N₀(½)^(t/t½) 半衰期', title: '放射現象' },
-            ];
-            formulas.forEach(f => idx.push({ type: 'formula', key: f.key, title: f.title, text: f.text }));
-            appState.searchIndex = idx;
-        }
-
-        function openSearch() {
-            document.getElementById('searchOverlay').style.display = 'flex';
-            document.getElementById('searchInput').value = '';
-            document.getElementById('searchResults').innerHTML = '<p style="padding:12px 20px;color:var(--text-secondary);">輸入關鍵字搜尋...</p>';
-            setTimeout(() => document.getElementById('searchInput').focus(), 100);
-        }
-
-        function closeSearch() {
-            document.getElementById('searchOverlay').style.display = 'none';
-        }
-
-        function performSearch(query) {
-            const resultsDiv = document.getElementById('searchResults');
-            if (!query.trim()) {
-                resultsDiv.innerHTML =
-                    '<p style="padding:12px 20px;color:var(--text-secondary);">輸入關鍵字搜尋...</p>';
-                return;
-            }
-            const q = query.toLowerCase();
-            const results = appState.searchIndex.filter(item => item.text.toLowerCase().includes(q));
-            if (results.length === 0) {
-                resultsDiv.innerHTML =
-                    '<p style="padding:12px 20px;color:var(--text-secondary);">沒有找到相關結果</p>';
-                return;
-            }
-            resultsDiv.innerHTML = results.slice(0, 15).map(r => `
-            <div class="result-item" onclick="searchResultClick('${r.key}', '${r.type}')">
-                <span class="match-type">${r.type==='formula'?'公式':r.type==='chapter'?'章節':'主題'}</span>
-                <strong>${r.title}</strong> - ${r.text.substring(0,80)}
-            </div>`).join('');
-        }
-
-        function searchResultClick(key, type) {
-            closeSearch();
-            if (type === 'chapter' || type === 'topic') {
-                navigateTo('content', key);
-            } else if (type === 'formula') {
-                navigateTo('content', key);
-            }
-        }
-
-        // ==================== SETTINGS ====================
-        function applySettings() {
-            const settings = getSettings();
-            document.getElementById('electiveE1').checked = settings.electives.includes('E1');
-            document.getElementById('electiveE2').checked = settings.electives.includes('E2');
-            document.getElementById('electiveE3').checked = settings.electives.includes('E3');
-            document.getElementById('electiveE4').checked = settings.electives.includes('E4');
-            appState.selectedElectives = settings.electives;
-            buildCourseTree();
-            populateTopicSelect();
-        }
-
-        function saveElectives() {
-            const electives = [];
-            if (document.getElementById('electiveE1').checked) electives.push('E1');
-            if (document.getElementById('electiveE2').checked) electives.push('E2');
-            if (document.getElementById('electiveE3').checked) electives.push('E3');
-            if (document.getElementById('electiveE4').checked) electives.push('E4');
-            const settings = getSettings();
-            settings.electives = electives;
-            saveSettings(settings);
-            appState.selectedElectives = electives;
-            buildCourseTree();
-            populateTopicSelect();
-            showToast('選修單元已更新 ✅');
-        }
-
-        function exportData() {
-            const data = {};
-            LS.getAllKeys().forEach(k => { data[k] = LS.get(k); });
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'dse_phy_backup_' + new Date().toISOString().split('T')[0] + '.json';
-            a.click();
-            URL.revokeObjectURL(url);
-            showToast('備份已下載 📥');
-        }
-
-        function importData(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    for (const [key, value] of Object.entries(data)) {
-                        LS.set(key, value);
-                    }
-                    showToast('備份已匯入 ✅');
-                    applySettings();
-                    refreshDashboard();
-                    renderWrongBook();
-                    updateWrongBadge();
-                    buildCourseTree();
-                } catch (err) {
-                    showToast('匯入失敗：檔案格式錯誤');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function resetAllData() {
-            if (confirm('確定要清除所有本地數據嗎？此操作無法撤銷！')) {
-                LS.getAllKeys().forEach(k => LS.remove(k));
-                showToast('所有數據已清除');
-                applySettings();
-                refreshDashboard();
-                renderWrongBook();
-                updateWrongBadge();
-                buildCourseTree();
-            }
-        }
-
-        // ==================== COURSE TREE ====================
-        function buildCourseTree() {
-            const treeEl = document.getElementById('courseTree');
-            const electives = appState.selectedElectives;
-            let html = '';
-            // Compulsory
-            html +=
-                `<div class="tree-item" onclick="toggleTree(this)"><span class="arrow">▶</span> 📘 ${COURSE_STRUCTURE.compulsory.title}</div>`;
-            html += `<div class="tree-children">`;
-            for (const [key, ch] of Object.entries(COURSE_STRUCTURE.compulsory.chapters)) {
-                html +=
-                    `<div class="tree-item" onclick="navigateTo('content','${key}')" style="padding-left:28px;">📄 ${ch.title}</div>`;
-            }
-            html += `</div>`;
-            // Elective
-            html +=
-                `<div class="tree-item" onclick="toggleTree(this)"><span class="arrow">▶</span> 📙 ${COURSE_STRUCTURE.elective.title}</div>`;
-            html += `<div class="tree-children">`;
-            for (const [key, ch] of Object.entries(COURSE_STRUCTURE.elective.chapters)) {
-                if (electives.includes(key)) {
-                    html +=
-                        `<div class="tree-item" onclick="navigateTo('content','${key}')" style="padding-left:28px;">📄 ${ch.title}</div>`;
-                }
-            }
-            html += `</div>`;
-            treeEl.innerHTML = html;
-        }
-
-        function toggleTree(el) {
-            const arrow = el.querySelector('.arrow');
-            const children = el.nextElementSibling;
-            if (children && children.classList.contains('tree-children')) {
-                children.classList.toggle('open');
-                arrow.classList.toggle('open');
-            }
-        }
-
-        // Open first tree items by default
-        function expandDefaultTrees() {
-            document.querySelectorAll('#courseTree .tree-children').forEach(ch => ch.classList.add('open'));
-            document.querySelectorAll('#courseTree .arrow').forEach(ar => ar.classList.add('open'));
-        }
-
-        // ==================== EVENT HANDLERS ====================
-        function initEventListeners() {
-            // Sidebar nav
-            document.getElementById('sidebarNav').addEventListener('click', function(e) {
-                const navItem = e.target.closest('.nav-item');
-                if (navItem && navItem.dataset.page) {
-                    e.preventDefault();
-                    navigateTo(navItem.dataset.page);
-                }
-            });
-            // Hamburger
-            document.getElementById('hamburgerBtn').addEventListener('click', () => {
-                appState.sidebarOpen = !appState.sidebarOpen;
-                document.getElementById('sidebar').classList.toggle('open', appState.sidebarOpen);
-            });
-            // Search
-            document.getElementById('searchBtn').addEventListener('click', openSearch);
-            document.getElementById('searchInput').addEventListener('input', function() {
-                performSearch(this.value);
-            });
-            document.getElementById('searchOverlay').addEventListener('click', function(e) {
-                if (e.target === this) closeSearch();
-            });
-            // Practice buttons
-            document.getElementById('btnStartPractice').addEventListener('click', startPractice);
-            document.getElementById('btnPauseTimer').addEventListener('click', pauseTimer);
-            document.getElementById('btnDraftToggle').addEventListener('click', () => {
-                const panel = document.getElementById('draftPanel');
-                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-                if (panel.style.display === 'block') initDraftCanvas();
-            });
-            document.getElementById('btnClearDraft').addEventListener('click', clearDraftCanvas);
-            // Wrong book
-            document.getElementById('wrongFilterTopic').addEventListener('change', renderWrongBook);
-            document.getElementById('wrongFilterType').addEventListener('change', renderWrongBook);
-            document.getElementById('btnRedoAllWrong').addEventListener('click', redoAllWrong);
-            document.getElementById('btnClearWrong').addEventListener('click', () => {
-                if (confirm('確定清空錯題本？')) { saveWrongBook([]);
-                    renderWrongBook();
-                    updateWrongBadge();
-                    showToast('錯題本已清空'); }
-            });
-            // Settings
-            document.getElementById('btnSaveElectives').addEventListener('click', saveElectives);
-            document.getElementById('btnExportData').addEventListener('click', exportData);
-            document.getElementById('btnImportData').addEventListener('click', () => document.getElementById(
-                'importFileInput').click());
-            document.getElementById('importFileInput').addEventListener('change', function() {
-                if (this.files[0]) importData(this.files[0]);
-            });
-            document.getElementById('btnResetAll').addEventListener('click', resetAllData);
-            // Float note
-            document.getElementById('btnCloseFloatNote').addEventListener('click', () => {
-                document.getElementById('floatNote').style.display = 'none';
-            });
-            document.getElementById('btnSaveFloatNote').addEventListener('click', () => {
-                const text = document.getElementById('floatNoteText').value;
-                const topic = appState.floatNoteTopic;
-                if (topic && text.trim()) {
-                    const notes = getNotes();
-                    notes[topic] = text.trim();
-                    saveNotes(notes);
-                    showToast('筆記已儲存 📝');
-                    document.getElementById('floatNote').style.display = 'none';
-                }
-            });
-            // Weak attack
-            document.getElementById('btnWeakAttack').addEventListener('click', () => {
-                const wb = getWrongBook().filter(w => !w.mastered);
-                if (wb.length === 0) { showToast('沒有錯題，無需速攻 🎉'); return; }
-                const shuffled = wb.sort(() => Math.random() - 0.5).slice(0, 5);
-                const questions = shuffled.map(w => QUESTION_BANK.find(q => q.id === w.questionId)).filter(
-                    Boolean);
-                if (questions.length === 0) { showToast('題庫已更新'); return; }
-                navigateTo('practice');
-                setTimeout(() => {
-                    appState.practiceQuestions = questions;
-                    appState.practiceIndex = 0;
-                    appState.practiceAnswers = new Array(questions.length).fill(null);
-                    appState.isPracticing = true;
-                    appState.practiceTimer = 0;
-                    document.getElementById('practiceSetup').style.display = 'none';
-                    document.getElementById('practiceArea').style.display = 'block';
-                    document.getElementById('practiceResult').style.display = 'none';
-                    document.getElementById('practiceTimer').textContent = '00:00';
-                    startTimer();
-                    renderPracticeQuestion();
-                }, 300);
-            });
-            // Keyboard shortcuts
-            document.addEventListener('keydown', function(e) {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                    e.preventDefault();
-                    openSearch();
-                }
-                if (e.key === 'Escape') {
-                    closeSearch();
-                    document.getElementById('floatNote').style.display = 'none';
-                }
-            });
-            // Online/offline
-            window.addEventListener('online', updateStatusDot);
-            window.addEventListener('offline', updateStatusDot);
-            // Click outside sidebar to close on mobile
-            document.addEventListener('click', function(e) {
-                if (window.innerWidth <= 768 && appState.sidebarOpen) {
-                    if (!e.target.closest('.sidebar') && !e.target.closest('.hamburger')) {
-                        appState.sidebarOpen = false;
-                        document.getElementById('sidebar').classList.remove('open');
-                    }
-                }
-            });
-        }
-
-        // ==================== DRAFT CANVAS ====================
-        let draftDrawing = false;
-        let draftCtx = null;
-
-        function initDraftCanvas() {
-            const canvas = document.getElementById('draftCanvas');
-            if (!canvas || draftCtx) return;
-            draftCtx = canvas.getContext('2d');
-            canvas.addEventListener('mousedown', (e) => { draftDrawing = true;
-                draftCtx.beginPath();
-                draftCtx.moveTo(e.offsetX, e.offsetY); });
-            canvas.addEventListener('mousemove', (e) => {
-                if (!draftDrawing) return;
-                draftCtx.lineTo(e.offsetX, e.offsetY);
-                draftCtx.strokeStyle = '#1e293b';
-                draftCtx.lineWidth = 2;
-                draftCtx.stroke();
-            });
-            canvas.addEventListener('mouseup', () => { draftDrawing = false; });
-            canvas.addEventListener('mouseleave', () => { draftDrawing = false; });
-            // Touch support
-            canvas.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                const rect = canvas.getBoundingClientRect();
-                const touch = e.touches[0];
-                draftDrawing = true;
-                draftCtx.beginPath();
-                draftCtx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
-            });
-            canvas.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                if (!draftDrawing) return;
-                const rect = canvas.getBoundingClientRect();
-                const touch = e.touches[0];
-                draftCtx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
-                draftCtx.strokeStyle = '#1e293b';
-                draftCtx.lineWidth = 2;
-                draftCtx.stroke();
-            });
-            canvas.addEventListener('touchend', () => { draftDrawing = false; });
-        }
-
-        function clearDraftCanvas() {
-            const canvas = document.getElementById('draftCanvas');
-            if (canvas && draftCtx) {
-                draftCtx.clearRect(0, 0, canvas.width, canvas.height);
-            }
-        }
-
-        // ==================== INIT ====================
-        function init() {
-            buildSearchIndex();
-            const settings = getSettings();
-            appState.selectedElectives = settings.electives || ['E1', 'E2', 'E3', 'E4'];
-            buildCourseTree();
-            expandDefaultTrees();
-            populateTopicSelect();
-            applySettings();
-            updateWrongBadge();
-            updateStatusDot();
-            updateLastSaveTime();
-            refreshDashboard();
-            initEventListeners();
-            // Log daily activity
-            logDailyActivity();
-            // Register service worker if supported
-            if ('serviceWorker' in navigator) {
-                // For full offline support, a service worker file would be needed.
-                // Here we just note it's available.
-                console.log('Service Worker support detected. For full offline caching, deploy with a sw.js file.');
-            }
-            console.log('🚀 DSE 物理溫習工具已就緒 | 完全離線可用 | 數據存於本機');
-            console.log('題庫題目數：' + QUESTION_BANK.length + ' 題');
-            console.log('快捷鍵：Ctrl+K 搜索 | ESC 關閉彈窗');
-        }
-
-        // Start the app
-        init();
-    </script>
+  </div>
+
+  <!-- Learn Page -->
+  <div class="page" id="page-learn">
+    <div class="breadcrumb" id="breadcrumb"></div>
+    <div class="page-title" id="learn-title">Select a topic to start</div>
+    <div id="learn-content"></div>
+  </div>
+
+  <!-- Practice Page -->
+  <div class="page" id="page-practice">
+    <div class="page-title">📝 Practice Center</div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
+      <span class="timer-display" id="timerDisplay">00:00</span>
+      <button class="btn btn-outline btn-sm" onclick="toggleTimer()">⏯️ Pause/Start</button>
+      <button class="btn btn-outline btn-sm" onclick="resetTimer()">🔄 Reset</button>
+      <span style="font-size:0.85em;color:var(--text-light);" id="progressText">Question 1/5</span>
+    </div>
+    <div class="progress-bar" style="margin-bottom:16px;"><div class="progress-fill" id="practiceProgress" style="width:0%;"></div></div>
+    <div id="practiceArea">
+      <p style="color:var(--text-light);">Choose a practice mode:</p>
+      <button class="btn btn-primary" onclick="startPractice('random',10)">🎲 Random 10 MCQs</button>
+      <button class="btn btn-outline" onclick="startPractice('all',20)" style="margin-left:8px;">📋 Mixed 20 Questions</button>
+    </div>
+    <div id="practiceResult" style="margin-top:16px;"></div>
+  </div>
+
+  <!-- Wrong Book Page -->
+  <div class="page" id="page-wrongbook">
+    <div class="page-title">📕 Wrong Answer Book</div>
+    <div class="page-subtitle">Automatically records your mistakes for targeted revision</div>
+    <div id="wrongbookFilters" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;"></div>
+    <div id="wrongbookList"></div>
+  </div>
+
+  <!-- Settings Page -->
+  <div class="page" id="page-settings">
+    <div class="page-title">⚙️ Settings</div>
+    <div class="card">
+      <div class="card-header">Elective Modules</div>
+      <p style="font-size:0.85em;color:var(--text-light);margin-bottom:10px;">Check the modules you are studying. Unchecked content will be hidden.</p>
+      <label style="display:block;margin:6px 0;"><input type="checkbox" id="setting-e1" checked onchange="saveSettings()"> E1 Astronomy & Space Science</label>
+      <label style="display:block;margin:6px 0;"><input type="checkbox" id="setting-e2" checked onchange="saveSettings()"> E2 Atomic World</label>
+      <label style="display:block;margin:6px 0;"><input type="checkbox" id="setting-e3" onchange="saveSettings()"> E3 Energy & Use of Energy</label>
+      <label style="display:block;margin:6px 0;"><input type="checkbox" id="setting-e4" onchange="saveSettings()"> E4 Medical Physics</label>
+    </div>
+    <div class="card">
+      <div class="card-header">Language</div>
+      <button class="btn btn-outline btn-sm" onclick="toggleLanguage()">Switch to 中文 (demo)</button>
+    </div>
+    <div class="card">
+      <div class="card-header">⚠️ Data Management</div>
+      <button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ Clear All Local Data</button>
+      <button class="btn btn-outline btn-sm" style="margin-left:8px;" onclick="exportData()">📤 Export Backup</button>
+      <button class="btn btn-outline btn-sm" style="margin-left:8px;" onclick="importDataPrompt()">📥 Import Backup</button>
+      <input type="file" id="importFileInputHidden" style="display:none;" accept=".json" onchange="importData(event)">
+    </div>
+  </div>
+</main>
+
+<!-- Notes overlay -->
+<div class="overlay-backdrop" id="notesBackdrop" onclick="toggleNotes()"></div>
+<div class="notes-overlay" id="notesOverlay">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <strong>📒 Notebook</strong>
+    <button class="btn btn-sm btn-outline" onclick="toggleNotes()">✕ Close</button>
+  </div>
+  <textarea id="notesTextarea" placeholder="Write your notes here... (auto-saved locally)"></textarea>
+  <div style="font-size:0.7em;color:var(--text-light);margin-top:6px;">Current topic: <span id="notesContext">General</span></div>
+</div>
+
+<div id="toastContainer"></div>
+
+<script>
+  // ==================== Global State ====================
+  const APP_STATE = {
+    currentPage: 'dashboard',
+    currentChapter: null,
+    practiceQuestions: [],
+    practiceIndex: 0,
+    practiceScore: 0,
+    practiceAnswers: [],
+    timerSeconds: 0,
+    timerRunning: false,
+    timerInterval: null,
+    notesChapter: 'General',
+    language: 'en',
+    settings: { electives: ['e1','e2'] },
+    scoreHistory: [],
+    wrongBook: [],
+    completedChapters: {},
+    streakDates: {},
+    favorites: {},
+    chapterNotes: {},
+  };
+
+  function loadState() {
+    try {
+      const saved = localStorage.getItem('dse_physics_state');
+      if (saved) Object.assign(APP_STATE, JSON.parse(saved));
+    } catch(e){}
+    const settings = localStorage.getItem('dse_physics_settings');
+    if(settings) try{ APP_STATE.settings = JSON.parse(settings); }catch(e){}
+    if(!APP_STATE.settings.electives) APP_STATE.settings.electives = ['e1','e2'];
+    if(!APP_STATE.wrongBook) APP_STATE.wrongBook = [];
+    if(!APP_STATE.scoreHistory) APP_STATE.scoreHistory = [];
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem('dse_physics_state', JSON.stringify(APP_STATE));
+      document.getElementById('lastSaved').textContent = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+    } catch(e) { showToast('⚠️ Storage full, please clear some data'); }
+  }
+
+  function saveSettings() {
+    APP_STATE.settings.electives = [];
+    if(document.getElementById('setting-e1').checked) APP_STATE.settings.electives.push('e1');
+    if(document.getElementById('setting-e2').checked) APP_STATE.settings.electives.push('e2');
+    if(document.getElementById('setting-e3').checked) APP_STATE.settings.electives.push('e3');
+    if(document.getElementById('setting-e4').checked) APP_STATE.settings.electives.push('e4');
+    localStorage.setItem('dse_physics_settings', JSON.stringify(APP_STATE.settings));
+    buildSidebarNav();
+    showToast('✅ Settings saved');
+  }
+
+  function loadSettingsUI() {
+    document.getElementById('setting-e1').checked = APP_STATE.settings.electives.includes('e1');
+    document.getElementById('setting-e2').checked = APP_STATE.settings.electives.includes('e2');
+    document.getElementById('setting-e3').checked = APP_STATE.settings.electives.includes('e3');
+    document.getElementById('setting-e4').checked = APP_STATE.settings.electives.includes('e4');
+  }
+
+  function showToast(msg) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 2400);
+  }
+
+  // ==================== Chapter Tree ====================
+  const CHAPTER_TREE = [
+    { id:'dashboard', emoji:'📊', label:'Dashboard', type:'page' },
+    { type:'divider' },
+    { id:'practice', emoji:'📝', label:'Practice Center', type:'page' },
+    { id:'wrongbook', emoji:'📕', label:'Wrong Book', type:'page' },
+    { type:'divider' },
+    { id:'ch1', emoji:'🔥', label:'1. Heat & Gases', type:'chapter', children:[
+      { id:'ch1_1', label:'1.1 Temperature & Internal Energy' },
+      { id:'ch1_2', label:'1.2 Heat Transfer' },
+      { id:'ch1_3', label:'1.3 Change of State' },
+      { id:'ch1_4', label:'1.4 Gas Laws' },
+    ]},
+    { id:'ch2', emoji:'🚀', label:'2. Force & Motion', type:'chapter', children:[
+      { id:'ch2_1', label:'2.1 Kinematics' },
+      { id:'ch2_2', label:'2.2 Newton\'s Laws' },
+      { id:'ch2_3', label:'2.3 Moment & Equilibrium' },
+      { id:'ch2_4', label:'2.4 Work & Energy' },
+      { id:'ch2_5', label:'2.5 Momentum' },
+      { id:'ch2_6', label:'2.6 Circular Motion' },
+    ]},
+    { id:'ch3', emoji:'🌊', label:'3. Wave Motion', type:'chapter', children:[
+      { id:'ch3_1', label:'3.1 Wave Properties' },
+      { id:'ch3_2', label:'3.2 Optics' },
+      { id:'ch3_3', label:'3.3 Sound' },
+    ]},
+    { id:'ch4', emoji:'⚡', label:'4. Electricity & Magnetism', type:'chapter', children:[
+      { id:'ch4_1', label:'4.1 Electrostatics' },
+      { id:'ch4_2', label:'4.2 Circuits' },
+      { id:'ch4_3', label:'4.3 Domestic Electricity' },
+      { id:'ch4_4', label:'4.4 Magnetic Fields & EM Induction' },
+    ]},
+    { id:'ch5', emoji:'☢️', label:'5. Radioactivity & Nuclear Energy', type:'chapter', children:[
+      { id:'ch5_1', label:'5.1 Decay & Half-life' },
+    ]},
+    { type:'divider' },
+    { id:'elective_header', emoji:'📚', label:'Elective Modules', type:'label' },
+    { id:'e1', emoji:'🔭', label:'E1 Astronomy', type:'chapter', elective:'e1', children:[
+      { id:'e1_1', label:'E1.1 Astronomical Observations' },
+    ]},
+    { id:'e2', emoji:'🔬', label:'E2 Atomic World', type:'chapter', elective:'e2', children:[
+      { id:'e2_1', label:'E2.1 Atomic Models' },
+    ]},
+    { id:'e3', emoji:'💡', label:'E3 Energy Use', type:'chapter', elective:'e3', children:[
+      { id:'e3_1', label:'E3.1 Energy Sources' },
+    ]},
+    { id:'e4', emoji:'🏥', label:'E4 Medical Physics', type:'chapter', elective:'e4', children:[
+      { id:'e4_1', label:'E4.1 Medical Imaging' },
+    ]},
+    { type:'divider' },
+    { id:'settings', emoji:'⚙️', label:'Settings', type:'page' },
+  ];
+
+  function buildSidebarNav() {
+    const nav = document.getElementById('sidebarNav');
+    let html = '';
+    const activeElectives = APP_STATE.settings.electives || ['e1','e2'];
+    CHAPTER_TREE.forEach(item => {
+      if(item.type === 'divider') html += '<div class="nav-divider"></div>';
+      else if(item.type === 'label') html += `<div class="nav-label">${item.emoji} ${item.label}</div>`;
+      else if(item.type === 'chapter') {
+        if(item.elective && !activeElectives.includes(item.elective)) return;
+        html += `<div class="nav-item chapter-toggle" data-chapter="${item.id}" onclick="toggleChapterSub('${item.id}')"><span class="emoji">${item.emoji}</span> ${item.label} <span style="margin-left:auto;font-size:0.7em;">▶</span></div>`;
+        html += `<div class="chapter-sub" id="sub-${item.id}">`;
+        if(item.children) item.children.forEach(child => {
+          html += `<div class="nav-item" data-chapter="${child.id}" onclick="navigateTo('learn','${child.id}')"><span class="emoji">📖</span> ${child.label}</div>`;
+        });
+        html += `</div>`;
+      } else if(item.type === 'page') {
+        html += `<div class="nav-item" data-page="${item.id}" onclick="navigateTo('${item.id}')"><span class="emoji">${item.emoji}</span> ${item.label}</div>`;
+      }
+    });
+    html += `<div class="nav-item" onclick="toggleNotes()"><span class="emoji">📒</span> Notebook</div>`;
+    nav.innerHTML = html;
+    updateActiveNav();
+  }
+
+  function toggleChapterSub(id) {
+    const sub = document.getElementById('sub-'+id);
+    if(sub) {
+      sub.classList.toggle('open');
+      const toggle = document.querySelector(`.chapter-toggle[data-chapter="${id}"] span:last-child`);
+      if(toggle) toggle.textContent = sub.classList.contains('open') ? '▼' : '▶';
+    }
+  }
+
+  function updateActiveNav() {
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    const activeEl = document.querySelector(`.nav-item[data-page="${APP_STATE.currentPage}"]`);
+    if(activeEl) activeEl.classList.add('active');
+    if(APP_STATE.currentChapter && APP_STATE.currentPage==='learn') {
+      const chapterEl = document.querySelector(`.nav-item[data-chapter="${APP_STATE.currentChapter}"]`);
+      if(chapterEl) chapterEl.classList.add('active');
+    }
+  }
+
+  function navigateTo(page, chapterId=null) {
+    APP_STATE.currentPage = page;
+    APP_STATE.currentChapter = chapterId;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById('page-'+page);
+    if(target) target.classList.add('active');
+    updateActiveNav();
+    if(page==='dashboard') renderDashboard();
+    if(page==='learn') renderLearnPage(chapterId);
+    if(page==='practice') renderPracticePage();
+    if(page==='wrongbook') renderWrongBook();
+    if(page==='settings') loadSettingsUI();
+    window.scrollTo({top:0, behavior:'smooth'});
+    document.getElementById('sidebar').classList.remove('mobile-open');
+  }
+
+  function toggleSidebar() { document.getElementById('sidebar').classList.toggle('mobile-open'); }
+
+  // ==================== Dashboard ====================
+  function renderDashboard() {
+    const now = new Date();
+    const weekStart = new Date(now); weekStart.setDate(now.getDate()-now.getDay()); weekStart.setHours(0,0,0,0);
+    const thisWeek = APP_STATE.scoreHistory.filter(s => new Date(s.date) >= weekStart);
+    const avg = thisWeek.length ? Math.round(thisWeek.reduce((a,b)=>a+b.score,0)/thisWeek.length) : '-';
+    document.getElementById('stat-practice-count').textContent = thisWeek.length;
+    document.getElementById('stat-avg-score').textContent = avg === '-' ? '-' : avg+'%';
+    document.getElementById('stat-streak').textContent = calculateStreak();
+    document.getElementById('stat-wrong-count').textContent = APP_STATE.wrongBook.length;
+    renderScoreChart();
+    const today = new Date().toISOString().split('T')[0];
+    if(!APP_STATE.streakDates[today]) { APP_STATE.streakDates[today] = true; saveState(); }
+  }
+
+  function calculateStreak() {
+    let streak = 0; const d = new Date();
+    for(let i=0; i<365; i++) {
+      const dateStr = d.toISOString().split('T')[0];
+      if(APP_STATE.streakDates[dateStr]) { streak++; d.setDate(d.getDate()-1); }
+      else if(i===0) { d.setDate(d.getDate()-1); continue; }
+      else break;
+    }
+    return streak;
+  }
+
+  let scoreChartInstance = null;
+  function renderScoreChart() {
+    const ctx = document.getElementById('scoreChart').getContext('2d');
+    if(scoreChartInstance) scoreChartInstance.destroy();
+    const recent = APP_STATE.scoreHistory.slice(-10);
+    scoreChartInstance = new Chart(ctx, {
+      type:'line',
+      data:{
+        labels: recent.map((_,i)=>`#${i+1}`),
+        datasets:[{ label:'Score (%)', data: recent.map(s=>s.score), borderColor:'#5b7fff', backgroundColor:'rgba(91,127,255,0.1)', fill:true, tension:0.4 }]
+      },
+      options:{ responsive:true, plugins:{legend:{display:false}}, scales:{y:{min:0,max:100}} }
+    });
+  }
+
+  function quickWeakAttack() {
+    if(APP_STATE.wrongBook.length===0) { showToast('👍 No wrong answers! Go practice.'); return; }
+    const shuffled = [...APP_STATE.wrongBook].sort(()=>Math.random()-0.5).slice(0,5);
+    const questions = shuffled.map(w => QUESTION_BANK.find(q=>q.id===w.questionId)).filter(q=>q);
+    if(questions.length===0) { showToast('Questions not found'); return; }
+    APP_STATE.practiceQuestions = questions;
+    APP_STATE.practiceIndex = 0; APP_STATE.practiceScore = 0; APP_STATE.practiceAnswers = [];
+    resetTimer(); startTimer(); navigateTo('practice'); renderPracticeQuestion();
+  }
+
+  // ==================== Learn Page ====================
+  function renderLearnPage(chapterId) {
+    const titleEl = document.getElementById('learn-title');
+    const contentEl = document.getElementById('learn-content');
+    const bc = document.getElementById('breadcrumb');
+    if(!chapterId) {
+      titleEl.textContent = 'Select a topic';
+      contentEl.innerHTML = '<p style="color:var(--text-light);">Choose a chapter from the sidebar.</p>';
+      bc.innerHTML = ''; return;
+    }
+    const info = getChapterInfo(chapterId);
+    titleEl.textContent = info.title;
+    bc.innerHTML = `<span onclick="navigateTo('learn')">📚 All Topics</span> › ${info.title}`;
+    contentEl.innerHTML = info.content;
+    if(typeof renderMathInElement === 'function') {
+      try { renderMathInElement(contentEl, { delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false }); } catch(e){}
+    }
+    APP_STATE.notesChapter = chapterId;
+    document.getElementById('notesContext').textContent = info.title;
+    document.getElementById('notesTextarea').value = APP_STATE.chapterNotes[chapterId] || '';
+  }
+
+  function getChapterInfo(chapterId) {
+    const data = {
+      'ch1_1': { title:'1.1 Temperature & Internal Energy', content:`<div class="card"><div class="card-header">🌡️ Concepts</div><p><strong>Temperature</strong> measures average kinetic energy of molecules. <strong>Internal energy</strong> is total KE + PE of all molecules.</p><p>$E_k = \\frac{3}{2}kT$ (for monatomic ideal gas)</p><p>$k = 1.38 \\times 10^{-23}\\,\\text{J K}^{-1}$</p></div><div class="card"><div class="card-header">🎮 Gas Molecule Simulator</div><canvas class="sim-canvas" id="simGas" width="500" height="300"></canvas><div class="sim-controls"><label>Piston position:</label><input type="range" id="simGasPiston" min="100" max="400" value="250" oninput="updateGasSim()"> <span id="simGasVol">Volume: 250</span></div></div>` },
+      'ch1_4': { title:'1.4 Gas Laws', content:`<div class="card"><div class="card-header">📐 Ideal Gas Law</div><p>$$PV = nRT$$</p><p>$P$ = pressure (Pa), $V$ = volume (m³), $n$ = moles, $R = 8.31\\,\\text{J mol}^{-1}\\text{K}^{-1}$, $T$ = temperature (K)</p><p><strong>Boyle's Law:</strong> $P \\propto 1/V$ (constant T)</p><p><strong>Charles's Law:</strong> $V \\propto T$ (constant P)</p></div>` },
+      'ch2_1': { title:'2.1 Kinematics', content:`<div class="card"><div class="card-header">🏃 Equations of Motion</div><p>$$v = u + at$$ $$s = ut + \\frac{1}{2}at^2$$ $$v^2 = u^2 + 2as$$</p></div><div class="card"><div class="card-header">🎮 Projectile Simulator</div><canvas class="sim-canvas" id="simProjectile" width="500" height="320"></canvas><div class="sim-controls"><label>Speed (m/s):</label><input type="range" id="simProjSpeed" min="10" max="60" value="30" oninput="updateProjectileSim()"> <label>Angle (°):</label><input type="range" id="simProjAngle" min="10" max="80" value="45" oninput="updateProjectileSim()"></div></div>` },
+      'ch2_2': { title:'2.2 Newton\'s Laws', content:`<div class="card"><div class="card-header">🍎 Newton's Laws</div><p><strong>1st Law:</strong> Inertia</p><p><strong>2nd Law:</strong> $F = ma$</p><p><strong>3rd Law:</strong> Action-reaction pairs act on different objects.</p></div>` },
+      'ch2_6': { title:'2.6 Circular Motion', content:`<div class="card"><div class="card-header">🔄 Uniform Circular Motion</div><p>Centripetal acceleration: $a = \\frac{v^2}{r} = r\\omega^2$</p><p>Centripetal force: $F = \\frac{mv^2}{r} = mr\\omega^2$</p></div>` },
+      'ch3_1': { title:'3.1 Wave Properties', content:`<div class="card"><div class="card-header">🌊 Basic Wave Equation</div><p>$v = f\\lambda$</p><p>Interference: constructive when path difference = $n\\lambda$, destructive when $(n+\\frac{1}{2})\\lambda$.</p></div><div class="card"><div class="card-header">🎮 Wave Interference Simulator</div><canvas class="sim-canvas" id="simWave" width="500" height="300"></canvas><div class="sim-controls"><label>Source separation:</label><input type="range" id="simWaveDist" min="30" max="150" value="80" oninput="updateWaveSim()"></div></div>` },
+      'ch4_2': { title:'4.2 Circuits', content:`<div class="card"><div class="card-header">⚡ Ohm's Law & Circuits</div><p>$V = IR$</p><p>Series: $R_{\\text{total}} = R_1 + R_2 + ...$</p><p>Parallel: $\\frac{1}{R_{\\text{total}}} = \\frac{1}{R_1} + \\frac{1}{R_2} + ...$</p></div>` },
+    };
+    if(!data[chapterId]) {
+      return { title: chapterId.replace(/_/g,'. '), content:`<div class="card"><div class="card-header">📖 Content under construction</div><p>Detailed notes coming soon. Try the practice questions for this topic.</p><button class="btn btn-primary" onclick="startChapterPractice('${chapterId}')">Practice this chapter</button></div>` };
+    }
+    return data[chapterId];
+  }
+
+  function startChapterPractice(chapterId) {
+    const questions = QUESTION_BANK.filter(q => q.chapter === chapterId || (q.tags && q.tags.includes(chapterId)));
+    if(questions.length===0) { showToast('No questions for this chapter yet.'); return; }
+    APP_STATE.practiceQuestions = questions;
+    APP_STATE.practiceIndex = 0; APP_STATE.practiceScore = 0; APP_STATE.practiceAnswers = [];
+    resetTimer(); startTimer(); navigateTo('practice'); renderPracticeQuestion();
+  }
+
+  // ==================== Practice System ====================
+  function startPractice(mode, count) {
+    let pool = [...QUESTION_BANK];
+    if(mode==='random') pool = pool.sort(()=>Math.random()-0.5).slice(0, count);
+    else pool = pool.sort(()=>Math.random()-0.5).slice(0, Math.min(count, pool.length));
+    APP_STATE.practiceQuestions = pool;
+    APP_STATE.practiceIndex = 0; APP_STATE.practiceScore = 0; APP_STATE.practiceAnswers = [];
+    resetTimer(); startTimer(); renderPracticeQuestion();
+  }
+
+  function renderPracticePage() {
+    if(APP_STATE.practiceQuestions.length===0) {
+      document.getElementById('practiceArea').innerHTML = `<p style="color:var(--text-light);">Choose a practice mode:</p><button class="btn btn-primary" onclick="startPractice('random',10)">🎲 Random 10 MCQs</button><button class="btn btn-outline" onclick="startPractice('all',20)" style="margin-left:8px;">📋 Mixed 20 Questions</button>`;
+      document.getElementById('practiceResult').innerHTML = '';
+      document.getElementById('progressText').textContent = 'Question 0/0';
+      document.getElementById('practiceProgress').style.width = '0%';
+    }
+  }
+
+  function renderPracticeQuestion() {
+    const area = document.getElementById('practiceArea');
+    const resultArea = document.getElementById('practiceResult');
+    resultArea.innerHTML = '';
+    if(APP_STATE.practiceIndex >= APP_STATE.practiceQuestions.length) {
+      const total = APP_STATE.practiceQuestions.length;
+      const score = APP_STATE.practiceScore;
+      const pct = Math.round((score/total)*100);
+      APP_STATE.scoreHistory.push({ date: new Date().toISOString(), score: pct, total });
+      if(APP_STATE.scoreHistory.length > 50) APP_STATE.scoreHistory = APP_STATE.scoreHistory.slice(-50);
+      saveState(); stopTimer();
+      area.innerHTML = `<div class="card" style="text-align:center;"><div style="font-size:3em;font-weight:800;color:var(--accent);">${pct}%</div><p>Correct: ${score}/${total}</p><button class="btn btn-primary" onclick="startPractice('random',10)">New Set</button><button class="btn btn-outline" onclick="navigateTo('dashboard')" style="margin-left:8px;">Dashboard</button></div>`;
+      document.getElementById('progressText').textContent = `Completed ${total} questions`;
+      document.getElementById('practiceProgress').style.width = '100%';
+      return;
+    }
+    const q = APP_STATE.practiceQuestions[APP_STATE.practiceIndex];
+    const idx = APP_STATE.practiceIndex;
+    const total = APP_STATE.practiceQuestions.length;
+    document.getElementById('progressText').textContent = `Question ${idx+1}/${total}`;
+    document.getElementById('practiceProgress').style.width = ((idx/total)*100)+'%';
+    let html = `<div class="question-block"><strong>Q${idx+1}:</strong> `;
+    if(q.tags) q.tags.forEach(t => { html += `<span class="tag ${t.includes('easy')?'tag-easy':t.includes('hard')?'tag-hard':'tag-medium'}">${t}</span> `; });
+    html += `<p style="margin-top:8px;">${q.question}</p>`;
+    if(q.type==='mc' && q.options) {
+      html += `<div id="optionsContainer">`;
+      q.options.forEach((opt, oi) => { html += `<div class="option-item" onclick="selectMCAnswer(${oi}, this)" data-option="${oi}">${String.fromCharCode(65+oi)}. ${opt}</div>`; });
+      html += `</div><button class="btn btn-primary btn-sm" style="margin-top:10px;" id="submitMCBtn" onclick="submitMCAnswer(${idx})">Submit</button>`;
+    } else if(q.type==='lq') {
+      html += `<textarea id="lqAnswer" style="width:100%;min-height:80px;border:2px solid #e5e7eb;border-radius:8px;padding:10px;" placeholder="Type your answer..."></textarea><button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="submitLQAnswer(${idx})">Submit & Compare</button>`;
+    }
+    html += `</div>`;
+    area.innerHTML = html;
+  }
+
+  function selectMCAnswer(oi, el) {
+    document.querySelectorAll('#optionsContainer .option-item').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    el.dataset.selectedOption = oi;
+  }
+
+  function submitMCAnswer(qIndex) {
+    const selected = document.querySelector('#optionsContainer .option-item.selected');
+    if(!selected) { showToast('Please select an option'); return; }
+    const q = APP_STATE.practiceQuestions[qIndex];
+    const chosen = parseInt(selected.dataset.selectedOption);
+    const correct = q.answer;
+    const isCorrect = chosen === correct;
+    document.querySelectorAll('#optionsContainer .option-item').forEach((opt, oi) => {
+      opt.style.pointerEvents = 'none';
+      if(oi===correct) opt.classList.add('correct');
+      if(oi===chosen && !isCorrect) opt.classList.add('wrong');
+    });
+    document.getElementById('submitMCBtn').disabled = true;
+    if(isCorrect) APP_STATE.practiceScore++;
+    else addToWrongBook(q, chosen);
+    APP_STATE.practiceAnswers.push({ questionId: q.id, chosen, correct: isCorrect });
+    const resultArea = document.getElementById('practiceResult');
+    resultArea.innerHTML = `<div class="card" style="border-left:4px solid ${isCorrect?'var(--success)':'var(--danger)'};"><strong>${isCorrect?'✅ Correct!':'❌ Incorrect!'}</strong><p>Correct answer: ${String.fromCharCode(65+correct)}</p><p>${q.explanation || ''}</p></div><button class="btn btn-primary btn-sm" onclick="nextPracticeQuestion()">Next ▶</button>`;
+    saveState();
+  }
+
+  function submitLQAnswer(qIndex) {
+    const userAnswer = document.getElementById('lqAnswer')?.value || '';
+    const q = APP_STATE.practiceQuestions[qIndex];
+    const keywords = q.keywords || [];
+    const matchCount = keywords.filter(kw => userAnswer.toLowerCase().includes(kw.toLowerCase())).length;
+    const matchPct = keywords.length ? Math.round((matchCount/keywords.length)*100) : 0;
+    const isGood = matchPct >= 50 || keywords.length===0;
+    if(!isGood && keywords.length>0) addToWrongBook(q, userAnswer);
+    if(isGood || keywords.length===0) APP_STATE.practiceScore++;
+    APP_STATE.practiceAnswers.push({ questionId: q.id, chosen: userAnswer, correct: isGood });
+    document.getElementById('practiceResult').innerHTML = `<div class="card" style="border-left:4px solid ${isGood||keywords.length===0?'var(--success)':'var(--danger)'};"><strong>${isGood||keywords.length===0?'👍 Good!':'📝 Needs improvement'}</strong><p>Keyword match: ${matchCount}/${keywords.length} (${matchPct}%)</p><p><strong>Reference answer:</strong> ${q.explanation}</p></div><button class="btn btn-primary btn-sm" onclick="nextPracticeQuestion()">Next ▶</button>`;
+    saveState();
+  }
+
+  function nextPracticeQuestion() { APP_STATE.practiceIndex++; document.getElementById('practiceResult').innerHTML = ''; renderPracticeQuestion(); }
+
+  function addToWrongBook(q, userAnswer) {
+    const exists = APP_STATE.wrongBook.find(w => w.questionId === q.id);
+    if(!exists) {
+      APP_STATE.wrongBook.push({
+        questionId: q.id,
+        userAnswer: typeof userAnswer==='number' ? String.fromCharCode(65+userAnswer) : String(userAnswer),
+        correctAnswer: q.type==='mc' ? String.fromCharCode(65+(q.answer||0)) : (q.explanation||''),
+        date: new Date().toISOString(),
+        chapter: q.chapter || '',
+        mastered: false,
+      });
+    } else {
+      exists.date = new Date().toISOString();
+      exists.userAnswer = typeof userAnswer==='number' ? String.fromCharCode(65+userAnswer) : String(userAnswer);
+      exists.mastered = false;
+    }
+  }
+
+  // ==================== Timer ====================
+  function toggleTimer() { APP_STATE.timerRunning ? stopTimer() : startTimer(); }
+  function startTimer() { if(APP_STATE.timerRunning) return; APP_STATE.timerRunning = true; APP_STATE.timerInterval = setInterval(()=>{ APP_STATE.timerSeconds++; updateTimerDisplay(); }, 1000); updateTimerDisplay(); }
+  function stopTimer() { APP_STATE.timerRunning = false; if(APP_STATE.timerInterval) clearInterval(APP_STATE.timerInterval); updateTimerDisplay(); }
+  function resetTimer() { stopTimer(); APP_STATE.timerSeconds = 0; updateTimerDisplay(); }
+  function updateTimerDisplay() {
+    const d = document.getElementById('timerDisplay');
+    if(!d) return;
+    const m = Math.floor(APP_STATE.timerSeconds/60), s = APP_STATE.timerSeconds%60;
+    d.textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    d.classList.toggle('timer-warning', APP_STATE.timerSeconds > 600);
+  }
+
+  // ==================== Wrong Book ====================
+  function renderWrongBook() {
+    document.getElementById('wrongbookFilters').innerHTML = `<button class="btn btn-sm btn-outline" onclick="filterWrongBook('all')">All (${APP_STATE.wrongBook.length})</button><button class="btn btn-sm btn-outline" onclick="filterWrongBook('active')">Not Mastered (${APP_STATE.wrongBook.filter(w=>!w.mastered).length})</button><button class="btn btn-sm btn-outline" onclick="filterWrongBook('mastered')">Mastered</button>`;
+    renderWrongBookList(APP_STATE.wrongBook);
+  }
+  function filterWrongBook(filter) {
+    let list = filter==='active' ? APP_STATE.wrongBook.filter(w=>!w.mastered) : filter==='mastered' ? APP_STATE.wrongBook.filter(w=>w.mastered) : APP_STATE.wrongBook;
+    renderWrongBookList(list);
+  }
+  function renderWrongBookList(list) {
+    const el = document.getElementById('wrongbookList');
+    if(list.length===0) { el.innerHTML = '<p style="color:var(--text-light);">🎉 No wrong answers!</p>'; return; }
+    let html = '';
+    list.forEach((w,i) => {
+      const q = QUESTION_BANK.find(q=>q.id===w.questionId);
+      html += `<div class="card" style="padding:14px;"><div style="display:flex;justify-content:space-between;"><div><strong>#${w.questionId}</strong><p>${q?q.question.substring(0,60)+'...':'(removed)'}</p><p>Your answer: <span style="color:var(--danger);">${w.userAnswer}</span> | Correct: <span style="color:var(--success);">${w.correctAnswer}</span></p><small>${new Date(w.date).toLocaleDateString()}</small></div><div>${!w.mastered?`<button class="btn btn-sm btn-success" onclick="markMastered('${w.questionId}')">Mastered</button>`:'<span class="tag tag-easy">✓ Mastered</span>'}</div></div></div>`;
+    });
+    el.innerHTML = html;
+  }
+  function markMastered(questionId) {
+    const w = APP_STATE.wrongBook.find(w=>w.questionId===questionId);
+    if(w) w.mastered = true;
+    saveState(); renderWrongBook(); showToast('✅ Marked as mastered');
+  }
+
+  // ==================== Notes ====================
+  function toggleNotes() {
+    const overlay = document.getElementById('notesOverlay');
+    const backdrop = document.getElementById('notesBackdrop');
+    if(overlay.classList.contains('open')) {
+      saveCurrentNotes();
+      overlay.classList.remove('open');
+      backdrop.classList.remove('show');
+    } else {
+      overlay.classList.add('open');
+      backdrop.classList.add('show');
+      document.getElementById('notesTextarea').value = APP_STATE.chapterNotes[APP_STATE.notesChapter] || '';
+      document.getElementById('notesContext').textContent = APP_STATE.notesChapter==='General'?'General': getChapterInfo(APP_STATE.notesChapter)?.title || 'General';
+    }
+  }
+  function saveCurrentNotes() {
+    const text = document.getElementById('notesTextarea').value;
+    if(text.trim()) APP_STATE.chapterNotes[APP_STATE.notesChapter] = text;
+    else delete APP_STATE.chapterNotes[APP_STATE.notesChapter];
+    saveState();
+  }
+  setInterval(() => { if(document.getElementById('notesOverlay').classList.contains('open')) saveCurrentNotes(); }, 5000);
+
+  // ==================== Data Management ====================
+  function clearAllData() {
+    if(confirm('Delete all local data? This cannot be undone.')) {
+      localStorage.clear();
+      APP_STATE.wrongBook = []; APP_STATE.scoreHistory = []; APP_STATE.chapterNotes = {}; APP_STATE.streakDates = {};
+      saveState(); buildSidebarNav(); renderDashboard(); showToast('🗑️ All data cleared');
+    }
+  }
+  function exportData() {
+    const blob = new Blob([JSON.stringify({state:APP_STATE, settings:APP_STATE.settings, date:new Date().toISOString()}, null,2)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dse_physics_backup.json'; a.click();
+    showToast('📤 Backup downloaded');
+  }
+  function importDataPrompt() { document.getElementById('importFileInputHidden').click(); }
+  function importData(event) {
+    const file = event.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if(data.state) { Object.assign(APP_STATE, data.state); if(data.settings) APP_STATE.settings = data.settings; saveState(); buildSidebarNav(); renderDashboard(); showToast('📥 Backup imported'); }
+      } catch(err) { showToast('⚠️ Invalid file'); }
+    };
+    reader.readAsText(file);
+  }
+  function toggleLanguage() { showToast('Language switch demo (content in English)'); }
+
+  // ==================== Canvas Simulators ====================
+  function updateGasSim() {
+    const canvas = document.getElementById('simGas'); if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const pistonX = parseInt(document.getElementById('simGasPiston').value);
+    document.getElementById('simGasVol').textContent = 'Volume: '+pistonX;
+    ctx.clearRect(0,0,500,300);
+    ctx.fillStyle='#1a1d2e'; ctx.fillRect(0,0,500,300);
+    ctx.strokeStyle='#5b7fff'; ctx.strokeRect(20,20,460,260);
+    ctx.fillStyle='#8890a8'; ctx.fillRect(20+pistonX,20,12,260);
+    const count = Math.floor(pistonX/20);
+    for(let i=0;i<count;i++){ ctx.beginPath(); ctx.arc(30+Math.random()*(pistonX-30),30+Math.random()*240,5,0,Math.PI*2); ctx.fillStyle='#ff6b6b'; ctx.fill(); }
+    ctx.fillStyle='#fff'; ctx.font='12px sans-serif'; ctx.fillText('Pressure ≈ '+(count*0.8).toFixed(1)+' (rel.)',30,280);
+  }
+  function updateProjectileSim() {
+    const canvas = document.getElementById('simProjectile'); if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const speed = parseInt(document.getElementById('simProjSpeed').value);
+    const angle = parseInt(document.getElementById('simProjAngle').value) * Math.PI/180;
+    ctx.clearRect(0,0,500,320);
+    ctx.fillStyle='#1a1d2e'; ctx.fillRect(0,0,500,320);
+    ctx.strokeStyle='#5b7fff'; ctx.beginPath(); ctx.moveTo(0,290); ctx.lineTo(500,290); ctx.stroke();
+    const g=9.8, vx=speed*Math.cos(angle), vy=speed*Math.sin(angle), sx=40, sy=270;
+    ctx.beginPath(); ctx.strokeStyle='#ff6b6b'; ctx.lineWidth=2; ctx.setLineDash([5,3]);
+    for(let t=0;t<10;t+=0.05){ const x=sx+vx*t*3, y=sy-(vy*t-0.5*g*t*t)*3; if(y>290||x>480) break; if(t===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+    ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(sx,sy,6,0,Math.PI*2); ctx.fill();
+    ctx.fillText(`Speed=${speed} m/s  Angle=${Math.round(angle*180/Math.PI)}°`,20,20);
+  }
+  function updateWaveSim() {
+    const canvas = document.getElementById('simWave'); if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const dist = parseInt(document.getElementById('simWaveDist').value);
+    ctx.clearRect(0,0,500,300); ctx.fillStyle='#1a1d2e'; ctx.fillRect(0,0,500,300);
+    const cx1=250-dist/2, cx2=250+dist/2, cy=150;
+    [cx1,cx2].forEach(cx=>{ ctx.beginPath(); ctx.arc(cx,cy,8,0,Math.PI*2); ctx.fillStyle='#ff6b6b'; ctx.fill(); for(let r=10;r<200;r+=20){ ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.strokeStyle='rgba(91,127,255,0.4)'; ctx.stroke(); } });
+    ctx.fillStyle='#fff'; ctx.fillText(`Source separation: ${dist}px`,15,20);
+  }
+  function initSimulators() { setTimeout(()=>{ if(document.getElementById('simGas')) updateGasSim(); if(document.getElementById('simProjectile')) updateProjectileSim(); if(document.getElementById('simWave')) updateWaveSim(); },300); }
+
+  // ==================== Question Bank (DSE Style) ====================
+  const QUESTION_BANK = [
+    // Heat & Gases
+    { id:'q01', type:'mc', chapter:'ch1_4', tags:['ch1_4','easy'], question:'A fixed mass of an ideal gas undergoes an isothermal expansion. Which of the following is correct?', options:['Pressure increases','Internal energy decreases','Work is done by the gas','Temperature increases'], answer:2, explanation:'Isothermal means constant T, so ΔU=0. Gas expands → does work.' },
+    { id:'q02', type:'mc', chapter:'ch1_4', tags:['ch1_4','medium'], question:'The volume of a gas is halved while the temperature remains constant. What happens to the pressure?', options:['Halved','Doubled','Quadrupled','Remains the same'], answer:1, explanation:'Boyle\'s law: P ∝ 1/V.' },
+    { id:'q03', type:'mc', chapter:'ch1_1', tags:['ch1_1','medium'], question:'Which statement about internal energy is correct?', options:['It depends only on temperature','It includes kinetic and potential energy of molecules','It is the same as heat','It is always zero at 0°C'], answer:1, explanation:'Internal energy = total KE + PE of all particles.' },
+    // Force & Motion
+    { id:'q04', type:'mc', chapter:'ch2_1', tags:['ch2_1','easy'], question:'A car accelerates uniformly from rest to 20 m/s in 4 s. What is the acceleration?', options:['2 m/s²','4 m/s²','5 m/s²','10 m/s²'], answer:2, explanation:'a = (v-u)/t = 20/4 = 5 m/s².' },
+    { id:'q05', type:'mc', chapter:'ch2_2', tags:['ch2_2','medium'], question:'A 2 kg object is acted upon by a net force of 10 N. What is its acceleration?', options:['0.2 m/s²','5 m/s²','10 m/s²','20 m/s²'], answer:1, explanation:'F=ma → a=10/2=5 m/s².' },
+    { id:'q06', type:'mc', chapter:'ch2_4', tags:['ch2_4','hard'], question:'A 1500 kg car accelerates from rest to 30 m/s in 10 s. Neglecting friction, what is the average power developed by the engine?', options:['45 kW','67.5 kW','90 kW','135 kW'], answer:1, explanation:'KE=½×1500×30²=675 kJ, Power = 675/10 = 67.5 kW.' },
+    { id:'q07', type:'mc', chapter:'ch2_6', tags:['ch2_6','hard'], question:'A satellite orbits Earth in a circular path. Which statement is true?', options:['Its speed changes due to gravity','The net force is zero','It experiences a centripetal force towards Earth','Its velocity is constant'], answer:2, explanation:'Gravity provides centripetal force, speed constant but velocity changes direction.' },
+    // Waves
+    { id:'q08', type:'mc', chapter:'ch3_1', tags:['ch3_1','medium'], question:'In a Young\'s double-slit experiment, the slit separation is 0.5 mm and the screen is 2 m away. The distance between the second bright fringe and the central fringe is 4 mm. What is the wavelength?', options:['400 nm','500 nm','600 nm','800 nm'], answer:1, explanation:'y = λD/d → λ = yd/D = (4e-3 * 0.5e-3)/2 = 1e-6 m = 1000 nm? Wait recalc: For n=2, y=2λD/d → λ = y d/(2D) = (4e-3*0.5e-3)/(4) = 5e-7 = 500 nm.' },
+    { id:'q09', type:'mc', chapter:'ch3_2', tags:['ch3_2','medium'], question:'When light travels from air into glass, which quantity remains unchanged?', options:['Speed','Wavelength','Frequency','Direction'], answer:2, explanation:'Frequency is determined by the source, remains constant.' },
+    // Electricity
+    { id:'q10', type:'mc', chapter:'ch4_2', tags:['ch4_2','easy'], question:'Two 6 Ω resistors are connected in parallel. The equivalent resistance is:', options:['12 Ω','6 Ω','3 Ω','1.5 Ω'], answer:2, explanation:'1/R = 1/6+1/6=1/3, R=3 Ω.' },
+    { id:'q11', type:'mc', chapter:'ch4_2', tags:['ch4_2','medium'], question:'A 12 V battery is connected to a 4 Ω resistor. What is the power dissipated?', options:['3 W','12 W','36 W','48 W'], answer:2, explanation:'P=V²/R=144/4=36 W.' },
+    { id:'q12', type:'lq', chapter:'ch4_4', tags:['ch4_4','hard'], question:'Explain Faraday\'s law of electromagnetic induction and give one application.', answer:0, explanation:'Induced emf is proportional to rate of change of magnetic flux. Application: electric generator.', keywords:['flux','change','induced','emf','generator'] },
+    // Radioactivity
+    { id:'q13', type:'mc', chapter:'ch5_1', tags:['ch5_1','medium'], question:'A radioactive source has a half-life of 3 hours. If the initial count rate is 1200 counts/min, what will it be after 9 hours?', options:['400','300','150','100'], answer:2, explanation:'9h = 3 half-lives, 1200→600→300→150.' },
+    { id:'q14', type:'mc', chapter:'ch5_1', tags:['ch5_1','easy'], question:'What is a half-life?', options:['Time for all nuclei to decay','Time for half the nuclei to decay','Time for activity to double','Time for radiation to stop'], answer:1, explanation:'Definition of half-life.' },
+    // Additional mixed
+    { id:'q15', type:'mc', chapter:'ch2_3', tags:['ch2_3','medium'], question:'A uniform plank of length 4 m is pivoted at its center. A 20 N weight is placed 1 m from the left end. What force must be applied at the right end to balance it?', options:['5 N','10 N','20 N','40 N'], answer:1, explanation:'Torque: 20 N × 1 m = F × 2 m → F=10 N.' },
+    { id:'q16', type:'lq', chapter:'ch2_1', tags:['ch2_1','medium'], question:'A ball is thrown vertically upward with a speed of 15 m/s from the ground. Calculate the maximum height reached. (g=10 m/s²)', answer:0, explanation:'v²=u²+2as → 0=225-20s → s=11.25 m.', keywords:['11.25','height','maximum','energy'] },
+  ];
+
+  // ==================== Init ====================
+  function init() {
+    loadState(); buildSidebarNav(); loadSettingsUI(); renderDashboard(); updateTimerDisplay();
+    if('serviceWorker' in navigator) { /* navigator.serviceWorker.register('/sw.js').catch(()=>{}); */ }
+    setInterval(saveState, 15000);
+    initSimulators();
+    console.log('DSE Physics Revision Tool ready. Questions loaded:', QUESTION_BANK.length);
+  }
+  document.addEventListener('DOMContentLoaded', init);
+  window.addEventListener('beforeunload', ()=>{ saveCurrentNotes(); saveState(); });
+</script>
 </body>
 </html>
